@@ -153,3 +153,41 @@ export async function appendOrder(env, orderData, categoryName) {
 
     return { inserted: rowsToAppend.length };
 }
+
+/**
+ * Reads configuration from 'Config' sheet
+ * Returns object with keys: MIN_TOTAL, DISCOUNT_THRESHOLD, DISCOUNT_RATE
+ */
+export async function readConfig(env) {
+    const token = await getAccessToken(env.GOOGLE_CLIENT_EMAIL, env.GOOGLE_PRIVATE_KEY);
+    const url = `${SHEETS_API_BASE}/${env.SPREADSHEET_ID}/values/Config!A:B?majorDimension=ROWS`;
+
+    try {
+        const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) return null; // Graceful fallback
+
+        const data = await res.json();
+        const rows = data.values || [];
+
+        const config = {};
+        rows.forEach(row => {
+            if (row.length >= 2) {
+                const key = String(row[0]).trim();
+                const val = parseFloat(String(row[1]).replace(/[^0-9.]/g, '')); // Sanitize number
+                if (key && !isNaN(val)) {
+                    // Special case for percentage if user put "20" instead of "0.20"
+                    if (key === 'DISCOUNT_RATE' && val > 1) {
+                        config[key] = val / 100;
+                    } else {
+                        config[key] = val;
+                    }
+                }
+            }
+        });
+
+        return config;
+    } catch (e) {
+        console.error('Error reading config', e);
+        return null;
+    }
+}

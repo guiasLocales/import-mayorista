@@ -763,6 +763,17 @@
 
       try {
         const data = await api.getProducts(params);
+
+        // Update Business Rules from API
+        if (data.config) {
+          console.log('Using config from Sheet:', data.config);
+          Object.assign(ORDER_RULES, data.config);
+          // Update Header Legend with new values
+          document.getElementById('page-legend').innerHTML =
+            `<strong>Compra mínima:</strong> ${money(ORDER_RULES.MIN_TOTAL)} · ` +
+            `<strong>${Math.round(ORDER_RULES.DISCOUNT_RATE * 100)}% OFF</strong> desde ${money(ORDER_RULES.DISCOUNT_THRESHOLD)}.`;
+        }
+
         renderProductsPage(data);
       } catch (err) {
         document.getElementById('product-tbody').innerHTML =

@@ -1,4 +1,4 @@
-import { readProducts, appendOrder } from './sheets-client.js';
+import { readProducts, appendOrder, readConfig } from './sheets-client.js';
 import { ORDER_RULES, isValidEmail } from './utils.js';
 
 export default {
@@ -54,32 +54,40 @@ async function handleGetProducts(request, env, url) {
     const search = (params.get('search') || '').toLowerCase().trim();
     const category = params.get('category') || env.DEFAULT_CATEGORY || 'LIBRERIA';
 
-    let products = await readProducts(env, category);
+    // Parallel fetch: Products + Config
+    const [products, sheetConfig] = await Promise.all([
+        readProducts(env, category),
+        readConfig(env)
+    ]);
+
+    // Merge Config with Defaults
+    const config = { ...ORDER_RULES, ...sheetConfig };
+
+    let filteredProducts = products;
 
     // Filter by Search (Local filter after fetching all products from sheet)
-    // Optimization: If sheet is huge, filtering should happen somewhat on Sheets side, 
-    // but Sheets API is limited. For <5000 rows, this is fine.
     if (search) {
-        products = products.filter(p =>
+        filteredProducts = products.filter(p =>
             (p.name || '').toLowerCase().includes(search) ||
             (p.code || '').toLowerCase().includes(search)
         );
     }
 
     // Pagination
-    const total = products.length;
+    const total = filteredProducts.length;
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
     const safePage = Math.min(Math.max(1, page), totalPages);
     const start = (safePage - 1) * pageSize;
     const end = start + pageSize;
 
     return new Response(JSON.stringify({
-        items: products.slice(start, end),
+        items: filteredProducts.slice(start, end),
         page: safePage,
         pageSize,
         total,
         totalPages,
-        category
+        category,
+        config
     }), {
         headers: { 'Content-Type': 'application/json' }
     });
@@ -96,22 +104,24 @@ async function handleSaveOrder(request, env) {
         return new Response(JSON.stringify({ error: 'Pedido vacío o datos incompletos' }), { status: 400 });
     }
 
-    // Basic Validation
     if (!order.client.name || !order.client.phone || !order.client.email) {
         return new Response(JSON.stringify({ error: 'Faltan datos del cliente' }), { status: 400 });
     }
 
-    // Re-calculate totals server-side for security
+    // Re-calculate totals server-side for security using Dynamic Config
+    const sheetConfig = await readConfig(env);
+    const rules = { ...ORDER_RULES, ...sheetConfig };
+
     const rawTotal = order.items.reduce((s, it) => s + (Number(it.price) * Number(it.qty)), 0);
 
-    if (rawTotal < ORDER_RULES.MIN_TOTAL) {
+    if (rawTotal < rules.MIN_TOTAL) {
         return new Response(JSON.stringify({
-            error: `Compra mínima no alcanzada. Mínimo: $${ORDER_RULES.MIN_TOTAL}`
+            error: `Compra mínima no alcanzada. Mínimo: $${rules.MIN_TOTAL}`
         }), { status: 400 });
     }
 
-    const discount = (rawTotal >= ORDER_RULES.DISCOUNT_THRESHOLD)
-        ? (rawTotal * ORDER_RULES.DISCOUNT_RATE)
+    const discount = (rawTotal >= rules.DISCOUNT_THRESHOLD)
+        ? (rawTotal * rules.DISCOUNT_RATE)
         : 0;
 
     const finalTotal = rawTotal - discount;
