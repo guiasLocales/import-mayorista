@@ -7,6 +7,8 @@ const SHEETS_API_BASE = 'https://sheets.googleapis.com/v4/spreadsheets';
  * Reads products from the specified Category sheet
  */
 export async function readProducts(env, category) {
+    if (!env.GOOGLE_PRIVATE_KEY) throw new Error('MISSING_SECRET: GOOGLE_PRIVATE_KEY no está configurado (asegurate de haber hecho click en Encrypt).');
+    if (!env.GOOGLE_CLIENT_EMAIL) throw new Error('MISSING_VAR: GOOGLE_CLIENT_EMAIL no está configurado.');
     const token = await getAccessToken(env.GOOGLE_CLIENT_EMAIL, env.GOOGLE_PRIVATE_KEY);
 
     // Fetch entire sheet (assuming header is row 1)
