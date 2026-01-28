@@ -885,6 +885,62 @@
       }
     }
 
+    // Helper para parsear la cantidad por bulto (ej: "10u" -> 10, "3x12u" -> 36)
+    function parsePackQuantity(packStr) {
+      if (!packStr) return 1;
+      const s = packStr.toLowerCase().trim();
+
+      // Caso 3x12u
+      const multiMatch = s.match(/(\d+)x(\d+)u/);
+      if (multiMatch) {
+        return parseInt(multiMatch[1]) * parseInt(multiMatch[2]);
+      }
+
+      // Caso 10u
+      const unitMatch = s.match(/(\d+)u/);
+      if (unitMatch) {
+        return parseInt(unitMatch[1]);
+      }
+
+      // Si es solo número
+      if (!isNaN(s)) return parseInt(s);
+
+      return 1;
+    }
+
+    // ----- GESTIÓN DE CARRITO -----
+    function addToCart(productId) {
+      const product = currentProducts.find(p => p.id === productId);
+      if (!product) return;
+
+      if (!product.stock) { alert('Este producto no tiene stock disponible'); return; }
+
+      // Determinar cantidad a agregar según presentación
+      const qtyToAdd = parsePackQuantity(product.pack);
+
+      const existing = cart.find(it => it.id === product.id);
+      if (existing) {
+        existing.qty += qtyToAdd;
+      } else {
+        cart.push({ ...product, qty: qtyToAdd });
+      }
+
+      saveCartToStorage();
+      updateCartBadge();
+
+      // Feedback visual temporal, finding button by event
+      const btn = event.target.closest('button');
+      if (btn) {
+        const originalText = btn.textContent;
+        btn.textContent = '✓ Agregado';
+        btn.style.background = '#0d8a4d';
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.style.background = '';
+        }, 1000);
+      }
+    }
+
     function openCart() { renderCart(); document.getElementById('cart-modal').classList.add('show'); }
     function closeCart() { document.getElementById('cart-modal').classList.remove('show'); }
 
