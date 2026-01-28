@@ -4,8 +4,8 @@ compatibility_date = "2024-01-01"
 
 [vars]
 DEFAULT_CATEGORY = "LIBRERIA"
-SPREADSHEET_ID = "REPLACE_WITH_SPREADSHEET_ID"
-GOOGLE_CLIENT_EMAIL = "REPLACE_WITH_CLIENT_EMAIL"
+SPREADSHEET_ID = "1FH5gV2qvHNoU3bgaKEt9sqIv1oB0_PobLsjIV8QFvdE"
+GOOGLE_CLIENT_EMAIL = "worker-catalogo@analytical-rain-485717-r5.iam.gserviceaccount.com"
 # GOOGLE_PRIVATE_KEY should be set via `wrangler secret put GOOGLE_PRIVATE_KEY` for security, 
 # but for development it can be here or in .dev.vars
 
