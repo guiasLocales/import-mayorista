@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <!-- META CATEGORTY: Injected by Cloudflare Worker -->
+  <meta name="category" content="{{CATEGORY}}">
+
+  <title>Catalogo - Import Mayorista</title>
+  <style>
+    /* =========================================
+       ESTILOS GENERALES Y LAYOUT
+       ========================================= */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #f5f5f5; }
+
+    /* HEADER & NAVEGACIÓN */
+    .header { position: sticky; top: 0; z-index: 20; background: #fff; padding: 20px 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
+    .header-container { max-width: 1400px; margin: 0 auto; }
+    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .header-title { font-size: 18px; font-weight: 600; color: #202124; }
+
+    /* LEYENDA COMERCIAL (REGLAS DE NEGOCIO VISIBLES) */
+    .header-legend {
+      margin-top: 6px;
+      font-size: 13px;
+      color: #5f6368;
+      line-height: 1.4;
+    }
+    .header-legend strong { color: #202124; }
+
+    /* BOTÓN CARRITO */
+    .cart-button { position: relative; padding: 10px 20px; border-radius: 6px; background: #1a73e8; color: #fff; border: none; cursor: pointer; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+    .cart-button:hover { background: #1765cc; }
+    .cart-badge { background: #ea4335; color: #fff; border-radius: 999px; padding: 2px 8px; font-size: 12px; min-width: 22px; text-align: center; font-weight: 700; }
+
+    /* DASHBOARD (KPIs SUPERIORES) */
+    .dashboard-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+    .kpi { background: #f8f9fa; border-radius: 8px; padding: 16px 20px; border: 1px solid #e8eaed; text-align: center; }
+    .kpi-label { color: #5f6368; font-size: 13px; margin-bottom: 6px; }
+    .kpi-value { font-weight: 700; font-size: 24px; color: #202124; }
+
+    /* CONTENIDO PRINCIPAL */
+    .content { padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
+
+    /* BARRA DE BÚSQUEDA */
+    .toolbar { display: flex; justify-content: center; margin-bottom: 20px; }
+    .toolbar input { padding: 12px 16px; border-radius: 8px; border: 1px solid #dadce0; font-size: 14px; width: 100%; max-width: 500px; }
+    .toolbar input:focus { outline: none; border-color: #1a73e8; }
+
+    /* TABLA DE PRODUCTOS */
+    .product-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 14px; }
+    .product-table th, .product-table td { padding: 14px; border-bottom: 1px solid #f1f3f4; vertical-align: middle; }
+    .product-table th { background: #f8f9fa; text-align: left; font-weight: 600; color: #5f6368; font-size: 12px; text-transform: uppercase; }
+    .product-table img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; }
+
+    /* BADGES DE STOCK */
+    .stock-badge { padding: 5px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; display: inline-block; }
+    .stock-badge.in-stock { background: #e6f4ea; color: #137333; }
+    .stock-badge.out-of-stock { background: #fce8e6; color: #c5221f; }
+
+    /* BOTONES ACCIÓN */
+    .btn-add { padding: 8px 16px; border-radius: 6px; border: none; background: #0f9d58; color: #fff; cursor: pointer; font-size: 13px; font-weight: 500; }
+    .btn-add:hover:not(:disabled) { background: #0d8a4d; }
+    .btn-add:disabled { background: #dadce0; color: #80868b; cursor: not-allowed; }
+
+    .status { padding: 16px 0; font-size: 13px; color: #5f6368; text-align: center; }
+
+    /* PAGINACIÓN */
+    .pagination { margin-top: 20px; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+    .page-btn { min-width: 40px; padding: 8px 12px; border-radius: 6px; border: 1px solid #dadce0; background: #fff; cursor: pointer; font-size: 14px; font-weight: 500; }
+    .page-btn.active { background: #1a73e8; border-color: #1a73e8; color: #fff; }
+    .page-btn:hover:not(.active) { background: #f8f9fa; }
+
+    /* MODALES (CARRITO Y CHECKOUT) */
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 50; }
+    .modal.show { display: flex; }
+
+    .modal-content { background: #fff; max-width: 600px; width: 95%; max-height: 90vh; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+    .modal-header, .modal-footer { padding: 20px 24px; border-bottom: 1px solid #e8eaed; display: flex; justify-content: space-between; align-items: center; }
+    .modal-header h3 { font-size: 18px; font-weight: 600; color: #202124; }
+    .modal-footer { border-top: 1px solid #e8eaed; border-bottom: none; gap: 12px; }
+    .modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; font-size: 14px; }
+
+    .close-btn { border: none; background: none; font-size: 28px; cursor: pointer; color: #5f6368; line-height: 1; }
+
+    .info-message { background: #e8f0fe; border-left: 4px solid #1a73e8; padding: 14px 16px; margin-bottom: 20px; border-radius: 4px; font-size: 13px; color: #174ea6; line-height: 1.6; }
+
+    /* ITEMS CARRITO */
+    .cart-item { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid #f1f3f4; }
+    .cart-item img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; }
+    .cart-item-main { flex: 1; }
+
+    .qty-controls { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+    .qty-controls button { padding: 5px 12px; border-radius: 4px; border: 1px solid #dadce0; background: #fff; cursor: pointer; font-size: 14px; font-weight: 500; }
+    .qty-controls button:hover { background: #f8f9fa; }
+    .qty-controls input { width: 60px; text-align: center; padding: 5px; border: 1px solid #dadce0; border-radius: 4px; font-size: 14px; }
+
+    /* TOTALES Y DESCUENTOS */
+    .cart-total { margin-top: 20px; padding-top: 20px; border-top: 2px solid #e8eaed; text-align: right; font-weight: 700; font-size: 20px; color: #202124; }
+    .cart-discount { margin-top: 8px; text-align: right; font-size: 14px; color: #137333; font-weight: 600; }
+    .cart-rawtotal { margin-top: 6px; text-align: right; font-size: 14px; color: #5f6368; }
+
+    .btn-primary { padding: 12px 24px; border-radius: 6px; border: none; background: #1a73e8; color: #fff; cursor: pointer; font-size: 14px; font-weight: 500; }
+    .btn-primary:hover:not(:disabled) { background: #1765cc; }
+    .btn-primary:disabled { background: #dadce0; color: #80868b; cursor: not-allowed; }
+    .btn-secondary { padding: 12px 24px; border-radius: 6px; border: 1px solid #dadce0; background: #fff; color: #5f6368; cursor: pointer; font-size: 14px; font-weight: 500; }
+    .btn-secondary:hover { background: #f8f9fa; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: #202124; }
+    .form-group input { width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid #dadce0; font-size: 14px; }
+    .form-group input:focus { outline: none; border-color: #1a73e8; }
+
+    .success-message {
+      background: #e6f4ea !important;
+      border-top: 2px solid #137333 !important;
+      color: #137333 !important;
+      font-weight: 500;
+      text-align: center;
+      padding: 20px !important;
+    }
+
+    /* MENSAJE DE ADVERTENCIA (COMPRA MÍNIMA) */
+    .warn-message {
+      background: #fce8e6;
+      border-left: 4px solid #c5221f;
+      padding: 12px 14px;
+      margin-top: 12px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #c5221f;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ==========================================
+       ESTRUCTURA VISUAL
+       ========================================== -->
+  <div class="header">
+    <div class="header-container">
+      <div class="header-top">
+        <div>
+          <div class="header-title" id="page-title"></div>
+          <!-- Leyenda comercial: Mínimos y Descuentos -->
+          <div class="header-legend" id="page-legend"></div>
+        </div>
+
+        <button class="cart-button" onclick="openCart()">
+          🛒 Carrito
+          <span id="cart-count" class="cart-badge">0</span>
+        </button>
+      </div>
+      <!-- Barra de KPIs (Resumen rápido) -->
+      <div id="dashboard-bar" class="dashboard-bar"></div>
+    </div>
+  </div>
+
+  <section class="content">
+    <div class="toolbar">
+      <input id="search-input" placeholder="Buscar por nombre o código..." oninput="onSearchChange()">
+    </div>
+
+    <table class="product-table">
+      <thead>
+        <tr>
+          <th>Imagen</th>
+          <th>Producto</th>
+          <th>Código</th>
+          <th>Stock</th>
+          <th>Precio</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="product-tbody"></tbody>
+    </table>
+
+    <div id="catalog-status" class="status"></div>
+    <div id="pagination" class="pagination"></div>
+  </section>
+
+  <!-- MODAL CARRITO -->
+  <div id="cart-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Carrito de Compras</h3>
+        <button class="close-btn" onclick="closeCart()">&times;</button>
+      </div>
+      <div id="cart-body" class="modal-body"></div>
+      <div class="modal-footer">
+        <!-- Botón de finalizar compra (se habilita solo si cumple mínimo) -->
+        <button id="checkout-btn" class="btn-primary" onclick="startCheckout()">Finalizar compra</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CHECKOUT -->
+  <div id="checkout-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Datos del pedido</h3>
+        <button class="close-btn" onclick="closeCheckout()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="info-message">
+          Ingresá tus datos que alguien de nuestro equipo se va a estar comunicando a la brevedad.
+        </div>
+        <div class="form-group">
+          <label>Nombre y apellido *</label>
+          <input id="client-name" required>
+        </div>
+        <div class="form-group">
+          <label>Teléfono *</label>
+          <input id="client-phone" required>
+        </div>
+        <div class="form-group">
+          <label>Email *</label>
+          <input id="client-email" type="email" required>
+        </div>
+
+        <div id="checkout-summary" class="cart-total"></div>
+
+        <!-- Aviso si al momento de enviar no cumple el mínimo -->
+        <div id="min-warn" class="warn-message" style="display:none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeCheckout()">Cancelar</button>
+        <button id="send-order-btn" class="btn-primary" onclick="submitOrder()">Enviar pedido</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       LÓGICA DEL CLIENTE (JS)
+       ========================================== -->
+  <script>
+    // Recuperar CATEGORY desde el Meta Tag inyectado por el Worker
+    const CATEGORY = document.querySelector('meta[name="category"]').content || 'SIN_CATEGORIA';
+
+    // Estado global de la aplicación
+    const state = {
+      page: 1,
+      pageSize: 24,
+      totalPages: 1,
+      search: '',
+      totalProducts: 0,
+    };
+
+    let cart = [];
+    let sendingOrder = false;
+
+    // REGLAS DE NEGOCIO (Espejo del backend para UX inmediata)
+    const ORDER_RULES = {
+      MIN_TOTAL: 100000,
+      DISCOUNT_THRESHOLD: 1000000,
+      DISCOUNT_RATE: 0.20,
+    };
+
+    // Helper de formateo monetario
+    function money(n) {
+      return '$' + Number(n || 0).toLocaleString('es-AR');
+    }
+
+    // API CLIENT (Replaces google.script.run)
+    const api = {
+      async getProducts(params) {
+        const qs = new URLSearchParams({
+          page: params.page,
+          pageSize: params.pageSize,
+          search: params.search,
+          category: CATEGORY
+        });
+        const res = await fetch('/api/products?' + qs.toString());
+        if (!res.ok) throw new Error('Error al cargar productos');
+        return await res.json();
+      },
+      
+      async saveOrder(order) {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(order)
+        });
+        if (!res.ok) {
+           const err = await res.json();
+           throw new Error(err.error || 'Error al guardar pedido');
+        }
+        return await res.json();
+      }
+    };
+
+    // Cálculo de totales y descuentos en tiempo real
+    function computeCartTotals() {
+      const rawTotal = cart.reduce((s, it) => s + (Number(it.price) * Number(it.qty)), 0);
+      const discount = (rawTotal >= ORDER_RULES.DISCOUNT_THRESHOLD)
+        ? (rawTotal * ORDER_RULES.DISCOUNT_RATE)
+        : 0;
+      const finalTotal = rawTotal - discount;
+      const units = cart.reduce((s, it) => s + it.qty, 0);
+      return { rawTotal, discount, finalTotal, units };
+    }
+
+    // Validador de Checkout
+    function canCheckout() {
+      const { rawTotal } = computeCartTotals();
+      return cart.length > 0 && rawTotal >= ORDER_RULES.MIN_TOTAL;
+    }
+
+    // PERSISTENCIA (LOCAL STORAGE)
+    function loadCartFromStorage() {
+      try {
+        const raw = localStorage.getItem('cart_' + CATEGORY);
+        cart = raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        cart = [];
+      }
+      updateCartBadge();
+      updateDashboard();
+    }
+
+    function saveCartToStorage() {
+      localStorage.setItem('cart_' + CATEGORY, JSON.stringify(cart));
+      updateDashboard();
+    }
+
+    // UI UPDATERS
+    function updateCartBadge() {
+      const count = cart.reduce((s, it) => s + it.qty, 0);
+      document.getElementById('cart-count').textContent = count;
+    }
+
+    function updateDashboard() {
+      const cartItems = cart.length;
+      const { rawTotal, discount, finalTotal, units: cartUnits } = computeCartTotals();
+
+      const bar = document.getElementById('dashboard-bar');
+      bar.innerHTML = `
+        <div class="kpi">
+          <div class="kpi-label">Productos (${CATEGORY})</div>
+          <div class="kpi-value">${state.totalProducts}</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Productos en carrito</div>
+          <div class="kpi-value">${cartItems}</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Artículos (unidades)</div>
+          <div class="kpi-value">${cartUnits}</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Total de compra</div>
+          <div class="kpi-value">${money(finalTotal)}</div>
+        </div>
+      `;
+    }
+
+    // INICIALIZACIÓN
+    function init() {
+      document.getElementById('page-title').textContent =
+        `Catálogo de Productos - Import Mayorista - ${CATEGORY}`;
+
+      document.getElementById('page-legend').innerHTML =
+        `<strong>Compra mínima:</strong> ${money(ORDER_RULES.MIN_TOTAL)} · ` +
+        `<strong>20% OFF</strong> desde ${money(ORDER_RULES.DISCOUNT_THRESHOLD)}.`;
+
+      loadCartFromStorage();
+      loadPage();
+    }
+
+    // BÚSQUEDA Y PAGINACIÓN
+    function onSearchChange() {
+      state.search = document.getElementById('search-input').value.trim();
+      state.page = 1;
+      loadPage();
+    }
+
+    async function loadPage() {
+      document.getElementById('catalog-status').textContent = 'Cargando...';
+
+      const params = {
+        page: state.page,
+        pageSize: state.pageSize,
+        search: state.search,
+      };
+
+      try {
+        const data = await api.getProducts(params);
+        renderProductsPage(data);
+      } catch (err) {
+        document.getElementById('product-tbody').innerHTML =
+            `<tr><td colspan="6" style="text-align:center;padding:40px;color:#c5221f;">Error: ${err.message}</td></tr>`;
+        document.getElementById('catalog-status').textContent = '';
+        document.getElementById('pagination').innerHTML = '';
+      }
+    }
+
+    function renderProductsPage(data) {
+      const items = data.items || [];
+
+      state.page = data.page;
+      state.totalPages = data.totalPages;
+      state.totalProducts = data.total;
+
+      const tbody = document.getElementById('product-tbody');
+      if (!items.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#5f6368;">No hay productos para mostrar</td></tr>';
+        document.getElementById('catalog-status').textContent = '';
+        document.getElementById('pagination').innerHTML = '';
+        updateDashboard();
+        return;
+      }
+
+      tbody.innerHTML = items.map(p => {
+        const stockBadge = p.stock
+          ? '<span class="stock-badge in-stock">Stock</span>'
+          : '<span class="stock-badge out-of-stock">Sin Stock</span>';
+
+        const btnDisabled = p.stock ? '' : 'disabled';
+        const btnText = p.stock ? 'Agregar' : 'No disponible';
+
+        // Sanitización básica de payload para evitar inyección en onclick
+        // Nota: en un entorno real, usar addEventListener en lugar de onclick inline es mejor, 
+        // pero mantenemos el estilo simple del original.
+        // Convertimos a base64 seguro o escapamos comillas
+        const safeJSON = JSON.stringify(p).replace(/"/g, '&quot;');
+
+        return `
+          <tr>
+            <td><img src="${p.img}" onerror="this.src='https://via.placeholder.com/60'"></td>
+            <td><strong>${p.name}</strong></td>
+            <td>${p.code}</td>
+            <td>${stockBadge}</td>
+            <td><strong>${money(p.price)}</strong></td>
+            <td><button class="btn-add" ${btnDisabled} data-product="${safeJSON}" onclick='addToCart(JSON.parse(this.dataset.product))'>${btnText}</button></td>
+          </tr>
+        `;
+      }).join('');
+
+      const searchText = state.search ? ` (búsqueda: "${state.search}")` : '';
+      document.getElementById('catalog-status').textContent =
+        `Mostrando ${items.length} de ${data.total} productos${searchText}. Página ${data.page} de ${data.totalPages}.`;
+
+      updateDashboard();
+      renderPagination();
+    }
+
+    function renderPagination() {
+      const cont = document.getElementById('pagination');
+      const { page, totalPages } = state;
+      if (totalPages <= 1) { cont.innerHTML = ''; return; }
+
+      const maxBtns = 7;
+      let start = Math.max(1, page - 3);
+      let end   = Math.min(totalPages, start + maxBtns - 1);
+      if (end - start < maxBtns - 1) start = Math.max(1, end - maxBtns + 1);
+
+      const btns = [];
+      if (page > 1) btns.push(`<button class="page-btn" onclick="goPage(${page - 1})">‹</button>`);
+      for (let p = start; p <= end; p++) {
+        btns.push(`<button class="page-btn ${p === page ? 'active' : ''}" onclick="goPage(${p})">${p}</button>`);
+      }
+      if (page < totalPages) btns.push(`<button class="page-btn" onclick="goPage(${page + 1})">›</button>`);
+      cont.innerHTML = btns.join('');
+    }
+
+    function goPage(p) {
+      if (p === state.page || p < 1 || p > state.totalPages) return;
+      state.page = p;
+      loadPage();
+    }
+
+    // ----- GESTIÓN DE CARRITO -----
+    function addToCart(product) {
+      if (!product.stock) { alert('Este producto no tiene stock disponible'); return; }
+
+      const existing = cart.find(it => it.id === product.id);
+      if (existing) existing.qty += 1;
+      else cart.push({ ...product, qty: 1 });
+
+      saveCartToStorage();
+      updateCartBadge();
+
+      // Feedback visual temporal
+      const btn = event.target;
+      const originalText = btn.textContent;
+      btn.textContent = '✓ Agregado';
+      btn.style.background = '#0d8a4d';
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.style.background = '';
+      }, 1000);
+    }
+
+    function openCart() { renderCart(); document.getElementById('cart-modal').classList.add('show'); }
+    function closeCart() { document.getElementById('cart-modal').classList.remove('show'); }
+
+    function renderCart() {
+      const body = document.getElementById('cart-body');
+
+      // Control del botón Finalizar Compra
+      const checkoutBtn = document.getElementById('checkout-btn');
+      checkoutBtn.disabled = !canCheckout();
+
+      if (!cart.length) {
+        body.innerHTML = '<div style="text-align:center;padding:40px;color:#5f6368;">El carrito está vacío</div>';
+        return;
+      }
+
+      const rows = cart.map((it, idx) => `
+        <div class="cart-item">
+          <img src="${it.img}" onerror="this.src='https://via.placeholder.com/60'">
+          <div class="cart-item-main">
+            <div><strong>${it.name}</strong></div>
+            <div style="font-size:12px;color:#5f6368;margin-top:4px;">Cód: ${it.code}</div>
+            <div style="margin-top:6px;">Precio: <strong>${money(it.price)}</strong></div>
+            <div class="qty-controls">
+              <button onclick="changeQty(${idx}, -1)">-</button>
+              <input type="number" min="1" value="${it.qty}" onchange="setQty(${idx}, this.value)">
+              <button onclick="changeQty(${idx}, 1)">+</button>
+              <button onclick="removeItem(${idx})" style="margin-left:8px;color:#ea4335;">Quitar</button>
+            </div>
+          </div>
+          <div style="text-align:right;font-weight:600;font-size:16px;">
+            ${money(it.price * it.qty)}
+          </div>
+        </div>
+      `).join('');
+
+      // Resumen económico con descuentos
+      const { rawTotal, discount, finalTotal } = computeCartTotals();
+
+      const discountHtml = discount > 0
+        ? `<div class="cart-rawtotal">Subtotal: ${money(rawTotal)}</div>
+           <div class="cart-discount">Descuento 20%: -${money(discount)}</div>`
+        : '';
+
+      const minWarn = rawTotal < ORDER_RULES.MIN_TOTAL
+        ? `<div class="warn-message" style="margin-top:14px;">
+             Compra mínima: <strong>${money(ORDER_RULES.MIN_TOTAL)}</strong>. Agregá productos para continuar.
+           </div>`
+        : '';
+
+      body.innerHTML =
+        rows +
+        discountHtml +
+        `<div class="cart-total">Total: ${money(finalTotal)}</div>` +
+        minWarn;
+    }
+
+    function changeQty(idx, delta) {
+      cart[idx].qty = Math.max(1, cart[idx].qty + delta);
+      saveCartToStorage(); renderCart(); updateCartBadge();
+    }
+    function setQty(idx, val) {
+      const n = parseInt(val, 10);
+      cart[idx].qty = Math.max(1, isNaN(n) ? 1 : n);
+      saveCartToStorage(); renderCart(); updateCartBadge();
+    }
+    function removeItem(idx) {
+      cart.splice(idx, 1);
+      saveCartToStorage(); renderCart(); updateCartBadge();
+    }
+
+    // ----- FLOW DE CHECKOUT -----
+    function startCheckout() {
+      if (!cart.length) { alert('El carrito está vacío'); return; }
+
+      // Doble validación de seguridad (Client-side)
+      const { rawTotal, discount, finalTotal, units } = computeCartTotals();
+
+      if (rawTotal < ORDER_RULES.MIN_TOTAL) {
+        alert(`Compra mínima: ${money(ORDER_RULES.MIN_TOTAL)}. Tu carrito actual es ${money(rawTotal)}.`);
+        return;
+      }
+
+      const summaryParts = [];
+      if (discount > 0) {
+        summaryParts.push(`Subtotal: ${money(rawTotal)}`);
+        summaryParts.push(`Descuento 20%: -${money(discount)}`);
+      }
+      summaryParts.push(`Total a solicitar: ${money(finalTotal)} (${units} unidades)`);
+
+      document.getElementById('checkout-summary').textContent = summaryParts.join(' · ');
+
+      // Resetear warnings previos
+      const warnEl = document.getElementById('min-warn');
+      warnEl.style.display = 'none';
+      warnEl.textContent = '';
+
+      closeCart();
+      document.getElementById('checkout-modal').classList.add('show');
+    }
+
+    function closeCheckout() { document.getElementById('checkout-modal').classList.remove('show'); }
+
+    async function submitOrder() {
+      if (sendingOrder) return;
+
+      const name  = document.getElementById('client-name').value.trim();
+      const phone = document.getElementById('client-phone').value.trim();
+      const email = document.getElementById('client-email').value.trim();
+
+      if (!name || !phone || !email) { alert('Todos los campos son obligatorios'); return; }
+      if (!cart.length) { alert('Carrito vacío'); return; }
+
+      // Validación final pre-envío
+      const { rawTotal } = computeCartTotals();
+      if (rawTotal < ORDER_RULES.MIN_TOTAL) {
+        const warnEl = document.getElementById('min-warn');
+        warnEl.style.display = 'block';
+        warnEl.textContent = `Compra mínima: ${money(ORDER_RULES.MIN_TOTAL)}. Tu carrito actual es ${money(rawTotal)}.`;
+        return;
+      }
+
+      const order = { client: { name, phone, email }, items: cart };
+
+      const summaryEl = document.getElementById('checkout-summary');
+      const btn       = document.getElementById('send-order-btn');
+
+      sendingOrder = true;
+      btn.disabled = true;
+      btn.textContent = 'Enviando...';
+      summaryEl.textContent = 'Enviando pedido...';
+
+      try {
+        const res = await api.saveOrder(order);
+
+        if (res && res.ok) {
+            summaryEl.innerHTML = '<div class="success-message">✓ Pedido enviado correctamente. ¡Gracias por tu compra!</div>';
+            cart = [];
+            saveCartToStorage();
+            updateCartBadge();
+
+            setTimeout(() => {
+              closeCheckout();
+              loadPage();
+            }, 2000);
+          } else {
+             throw new Error('La respuesta del servidor no fue OK');
+          }
+
+      } catch (err) {
+          btn.textContent = 'Enviar pedido';
+          alert('Error al enviar pedido: ' + err.message);
+      } finally {
+        sendingOrder = false;
+        btn.disabled = false;
+      }
+    }
+
+    // Arranque de la App
+    init();
+  </script>
+</body>
+</html>

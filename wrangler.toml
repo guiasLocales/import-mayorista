@@ -1,0 +1,14 @@
+name = "catalogo-mayorista"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+DEFAULT_CATEGORY = "LIBRERIA"
+SPREADSHEET_ID = "REPLACE_WITH_SPREADSHEET_ID"
+GOOGLE_CLIENT_EMAIL = "REPLACE_WITH_CLIENT_EMAIL"
+# GOOGLE_PRIVATE_KEY should be set via `wrangler secret put GOOGLE_PRIVATE_KEY` for security, 
+# but for development it can be here or in .dev.vars
+
+[assets]
+directory = "./public"
+binding = "ASSETS"

@@ -1,0 +1,15 @@
+{
+  "name": "catalogo-mayorista",
+  "version": "1.0.0",
+  "description": "Catalogo Mayorista on Cloudflare Workers",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}
