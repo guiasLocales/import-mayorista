@@ -619,6 +619,7 @@
     };
 
     let cart = [];
+    let currentProducts = []; // Store fetched products globally
     let sendingOrder = false;
 
     // REGLAS DE NEGOCIO (Espejo del backend para UX inmediata)
@@ -778,7 +779,7 @@
         renderProductsPage(data);
       } catch (err) {
         document.getElementById('product-tbody').innerHTML =
-          `<tr><td colspan="6" style="text-align:center;padding:40px;color:#c5221f;">Error: ${err.message}</td></tr>`;
+          `<tr><td colspan="7" style="text-align:center;padding:40px;color:#c5221f;">Error: ${err.message}</td></tr>`;
         document.getElementById('catalog-status').textContent = '';
         document.getElementById('pagination').innerHTML = '';
       }
@@ -786,6 +787,7 @@
 
     function renderProductsPage(data) {
       const items = data.items || [];
+      currentProducts = items; // Update global state
 
       state.page = data.page;
       state.totalPages = data.totalPages;
@@ -793,7 +795,7 @@
 
       const tbody = document.getElementById('product-tbody');
       if (!items.length) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#5f6368;">No hay productos para mostrar</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#5f6368;">No hay productos para mostrar</td></tr>';
         document.getElementById('catalog-status').textContent = '';
         document.getElementById('pagination').innerHTML = '';
         updateDashboard();
@@ -807,12 +809,6 @@
 
         const btnDisabled = p.stock ? '' : 'disabled';
         const btnText = p.stock ? 'Agregar' : 'No disponible';
-
-        // Sanitización básica de payload para evitar inyección en onclick
-        // Nota: en un entorno real, usar addEventListener en lugar de onclick inline es mejor, 
-        // pero mantenemos el estilo simple del original.
-        // Convertimos a base64 seguro o escapamos comillas
-        const safeJSON = JSON.stringify(p).replace(/"/g, '&quot;');
 
         return `
           <tr>
@@ -863,7 +859,10 @@
     }
 
     // ----- GESTIÓN DE CARRITO -----
-    function addToCart(product) {
+    function addToCart(productId) {
+      const product = currentProducts.find(p => p.id === productId);
+      if (!product) return;
+
       if (!product.stock) { alert('Este producto no tiene stock disponible'); return; }
 
       const existing = cart.find(it => it.id === product.id);
@@ -873,15 +872,17 @@
       saveCartToStorage();
       updateCartBadge();
 
-      // Feedback visual temporal
-      const btn = event.target;
-      const originalText = btn.textContent;
-      btn.textContent = '✓ Agregado';
-      btn.style.background = '#0d8a4d';
-      setTimeout(() => {
-        btn.textContent = originalText;
-        btn.style.background = '';
-      }, 1000);
+      // Feedback visual temporal, finding button by event
+      const btn = event.target.closest('button');
+      if (btn) {
+        const originalText = btn.textContent;
+        btn.textContent = '✓ Agregado';
+        btn.style.background = '#0d8a4d';
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.style.background = '';
+        }, 1000);
+      }
     }
 
     function openCart() { renderCart(); document.getElementById('cart-modal').classList.add('show'); }
@@ -924,7 +925,7 @@
 
       const discountHtml = discount > 0
         ? `<div class="cart-rawtotal">Subtotal: ${money(rawTotal)}</div>
-           <div class="cart-discount">Descuento 20%: -${money(discount)}</div>`
+           <div class="cart-discount">Descuento ${(ORDER_RULES.DISCOUNT_RATE * 100)}%: -${money(discount)}</div>`
         : '';
 
       const minWarn = rawTotal < ORDER_RULES.MIN_TOTAL
@@ -969,7 +970,7 @@
       const summaryParts = [];
       if (discount > 0) {
         summaryParts.push(`Subtotal: ${money(rawTotal)}`);
-        summaryParts.push(`Descuento 20%: -${money(discount)}`);
+        summaryParts.push(`Descuento ${(ORDER_RULES.DISCOUNT_RATE * 100)}%: -${money(discount)}`);
       }
       summaryParts.push(`Total a solicitar: ${money(finalTotal)} (${units} unidades)`);
 
