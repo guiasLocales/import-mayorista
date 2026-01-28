@@ -24,7 +24,7 @@ export default {
                 const category = env.DEFAULT_CATEGORY || 'LIBRERIA';
 
                 return new HTMLRewriter()
-                    .on('meta[name="category"]', {
+                    .on('#meta-category', {
                         element(element) {
                             element.setAttribute('content', category);
                         }
