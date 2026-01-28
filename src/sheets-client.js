@@ -39,6 +39,7 @@ export async function readProducts(env, category) {
         price: headers.indexOf('price'),
         stockFlag: headers.indexOf('product_use_stock'),
         img: headers.indexOf('full_image_url'),
+        pack: headers.indexOf('search_codes'), // New column
     };
 
     // Integrity Check
@@ -66,6 +67,7 @@ export async function readProducts(env, category) {
                 name: String(r[idx.name] || ''),
                 price: Number(r[idx.price] || 0),
                 img: String(r[idx.img] || ''),
+                pack: (idx.pack !== -1) ? String(r[idx.pack] || '') : '',
                 stock: hasStock,
             };
         });

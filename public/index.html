@@ -529,6 +529,7 @@
         <tr>
           <th>Imagen</th>
           <th>Producto</th>
+          <th>Presentación</th>
           <th>Código</th>
           <th>Stock</th>
           <th>Precio</th>
@@ -815,12 +816,15 @@
 
         return `
           <tr>
-            <td><img src="${p.img}" onerror="this.src='https://via.placeholder.com/60'"></td>
-            <td><strong>${p.name}</strong></td>
-            <td>${p.code}</td>
+            <td><img src="${p.img}" alt="${p.name}" loading="lazy"></td>
+            <td style="font-weight:500; color:#202124;">${p.name}</td>
+            <td style="color:#5f6368; font-size:13px;">${p.pack || '-'}</td>
+            <td style="color:#5f6368;">${p.code}</td>
             <td>${stockBadge}</td>
-            <td><strong>${money(p.price)}</strong></td>
-            <td><button class="btn-add" ${btnDisabled} data-product="${safeJSON}" onclick='addToCart(JSON.parse(this.dataset.product))'>${btnText}</button></td>
+            <td style="font-weight:700; color:#202124;">${money(p.price)}</td>
+            <td style="text-align:right;">
+               <button class="btn-add" ${btnDisabled} onclick="addToCart('${p.id}')">${btnText}</button>
+            </td>
           </tr>
         `;
       }).join('');
