@@ -956,7 +956,9 @@
         return;
       }
 
-      const rows = cart.map((it, idx) => `
+      const rows = cart.map((it, idx) => {
+        const packSize = parsePackQuantity(it.pack);
+        return `
         <div class="cart-item">
           <img src="${it.img}" onerror="this.src='https://via.placeholder.com/60'">
           <div class="cart-item-main">
@@ -965,16 +967,18 @@
             <div style="margin-top:6px;">Precio: <strong>${money(it.price)}</strong></div>
             <div class="qty-controls">
               <button onclick="changeQty(${idx}, -1)">-</button>
-              <input type="number" min="1" value="${it.qty}" onchange="setQty(${idx}, this.value)">
+              <input type="number" min="${packSize}" step="${packSize}" value="${it.qty}" onchange="setQty(${idx}, this.value)">
               <button onclick="changeQty(${idx}, 1)">+</button>
               <button onclick="removeItem(${idx})" style="margin-left:8px;color:#ea4335;">Quitar</button>
             </div>
+            ${packSize > 1 ? `<div style="font-size:11px;color:#1a73e8;margin-top:2px;">Pack: ${packSize} u.</div>` : ''}
           </div>
           <div style="text-align:right;font-weight:600;font-size:16px;">
             ${money(it.price * it.qty)}
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
 
       // Resumen económico con descuentos
       const { rawTotal, discount, finalTotal } = computeCartTotals();
@@ -998,14 +1002,30 @@
     }
 
     function changeQty(idx, delta) {
-      cart[idx].qty = Math.max(1, cart[idx].qty + delta);
+      const it = cart[idx];
+      const packSize = parsePackQuantity(it.pack);
+      const step = packSize;
+
+      cart[idx].qty = Math.max(step, cart[idx].qty + (delta * step));
       saveCartToStorage(); renderCart(); updateCartBadge();
     }
+
     function setQty(idx, val) {
-      const n = parseInt(val, 10);
-      cart[idx].qty = Math.max(1, isNaN(n) ? 1 : n);
+      const it = cart[idx];
+      const packSize = parsePackQuantity(it.pack);
+      let n = parseInt(val, 10);
+      if (isNaN(n)) n = packSize;
+
+      // Ajustar a múltiplo del pack si es necesario
+      if (packSize > 1) {
+        n = Math.round(n / packSize) * packSize;
+        if (n === 0) n = packSize;
+      }
+
+      cart[idx].qty = Math.max(packSize, n);
       saveCartToStorage(); renderCart(); updateCartBadge();
     }
+
     function removeItem(idx) {
       cart.splice(idx, 1);
       saveCartToStorage(); renderCart(); updateCartBadge();
