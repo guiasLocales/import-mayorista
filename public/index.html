@@ -642,7 +642,14 @@
           category: CATEGORY
         });
         const res = await fetch('/api/products?' + qs.toString());
-        if (!res.ok) throw new Error('Error al cargar productos');
+        if (!res.ok) {
+          let msg = 'Error al cargar productos';
+          try {
+            const errData = await res.json();
+            msg = errData.error || msg;
+          } catch (e) { }
+          throw new Error(msg);
+        }
         return await res.json();
       },
 
