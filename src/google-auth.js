@@ -20,10 +20,11 @@ function arrayBufferToBase64Url(buffer) {
 
 // Helper: Import PEM Key for Web Crypto
 async function importPrivateKey(pem) {
-    // Remove headers and newlines
+    // Remove headers and newlines (and literal \n from JSON)
     const pemContents = pem
         .replace(/-----BEGIN PRIVATE KEY-----/, '')
         .replace(/-----END PRIVATE KEY-----/, '')
+        .replace(/\\n/g, '')
         .replace(/\s/g, '');
 
     const binaryDerString = atob(pemContents);
