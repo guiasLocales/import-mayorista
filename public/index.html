@@ -631,10 +631,65 @@
       color: #c5221f;
       line-height: 1.5;
     }
+
+    /* IMAGEN LIGHTBOX */
+    .lightbox-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .lightbox-modal.show {
+      display: flex;
+      opacity: 1;
+    }
+
+    .lightbox-content {
+      max-width: 90%;
+      max-height: 90vh;
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      object-fit: contain;
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      color: #fff;
+      font-size: 30px;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Cursor zoom */
+    .product-table img,
+    .pcm-img {
+      cursor: zoom-in;
+    }
   </style>
 </head>
 
 <body>
+  <!-- LIGHTBOX MODAL -->
+  <div id="lightbox-modal" class="lightbox-modal" onclick="closeImageModal()">
+    <button class="lightbox-close">&times;</button>
+    <img id="lightbox-img" class="lightbox-content" src="" onclick="event.stopPropagation()">
+  </div>
+
   <!-- ==========================================
        ESTRUCTURA VISUAL
        ========================================== -->
@@ -930,6 +985,19 @@
       }
     }
 
+    /* Lightbox Functions */
+    function openImageModal(src) {
+      if (!src) return;
+      const modal = document.getElementById('lightbox-modal');
+      const img = document.getElementById('lightbox-img');
+      img.src = src;
+      modal.classList.add('show');
+    }
+
+    function closeImageModal() {
+      document.getElementById('lightbox-modal').classList.remove('show');
+    }
+
     function renderProductsPage(data) {
       const items = data.items || [];
       currentProducts = items; // Update global state
@@ -947,6 +1015,8 @@
         return;
       }
 
+
+
       tbody.innerHTML = items.map(p => {
         const stockBadge = p.stock
           ? '<span class="stock-badge in-stock">Stock</span>'
@@ -957,7 +1027,7 @@
 
         return `
           <tr>
-            <td><img src="${p.img}" alt="${p.name}" loading="lazy"></td>
+            <td><img src="${p.img}" alt="${p.name}" loading="lazy" onclick="openImageModal('${p.img}')"></td>
             <td style="font-weight:500; color:#202124;">${p.name}</td>
             <td style="color:#5f6368; font-size:13px;">${p.pack || '-'}</td>
             <td style="color:#5f6368;">${p.code}</td>
@@ -987,7 +1057,7 @@
 
         return `
          <div class="product-card-mobile">
-            <img src="${p.img}" class="pcm-img" loading="lazy" onerror="this.src='https://via.placeholder.com/80?text=No+Img'">
+            <img src="${p.img}" class="pcm-img" loading="lazy" onerror="this.src='https://via.placeholder.com/80?text=No+Img'" onclick="openImageModal('${p.img}')">
             <div class="pcm-info">
                <div class="pcm-title">${p.name}</div>
                <div class="pcm-meta">
@@ -1036,31 +1106,7 @@
     }
 
     // ----- GESTIÓN DE CARRITO -----
-    function addToCart(productId) {
-      const product = currentProducts.find(p => p.id === productId);
-      if (!product) return;
-
-      if (!product.stock) { alert('Este producto no tiene stock disponible'); return; }
-
-      const existing = cart.find(it => it.id === product.id);
-      if (existing) existing.qty += 1;
-      else cart.push({ ...product, qty: 1 });
-
-      saveCartToStorage();
-      updateCartBadge();
-
-      // Feedback visual temporal, finding button by event
-      const btn = event.target.closest('button');
-      if (btn) {
-        const originalText = btn.textContent;
-        btn.textContent = '✓ Agregado';
-        btn.style.background = '#0d8a4d';
-        setTimeout(() => {
-          btn.textContent = originalText;
-          btn.style.background = '';
-        }, 1000);
-      }
-    }
+    // ----- GESTIÓN DE CARRITO (Duplicate Removed) -----
 
     // Helper para parsear la cantidad por bulto (ej: "10u" -> 10, "3x12u" -> 36)
     function parsePackQuantity(packStr) {
