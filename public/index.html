@@ -448,6 +448,123 @@
       background: #f8f9fa;
     }
 
+    /* MOBILE RESPONSIVENESS */
+    .product-grid-mobile {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        padding: 16px;
+      }
+
+      .header-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+
+      .header-title {
+        font-size: 16px;
+        padding-right: 90px;
+      }
+
+      /* Space for cart button */
+      .cart-button {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        padding: 6px 12px;
+        font-size: 13px;
+      }
+
+      .dashboard-bar {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .kpi {
+        padding: 12px;
+      }
+
+      .kpi-label {
+        font-size: 11px;
+      }
+
+      .kpi-value {
+        font-size: 18px;
+      }
+
+      .toolbar input {
+        max-width: 100%;
+      }
+
+      .product-table {
+        display: none;
+      }
+
+      .product-grid-mobile {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 10px;
+      }
+
+      .product-card-mobile {
+        background: #fff;
+        border-radius: 8px;
+        padding: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+      }
+
+      .pcm-img {
+        width: 80px;
+        height: 80px;
+        object-fit: contain;
+        border-radius: 4px;
+        border: 1px solid #f1f3f4;
+        background: #fff;
+      }
+
+      .pcm-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .pcm-title {
+        font-weight: 500;
+        font-size: 14px;
+        color: #202124;
+        margin-bottom: 4px;
+        line-height: 1.3;
+      }
+
+      .pcm-meta {
+        font-size: 12px;
+        color: #5f6368;
+        margin-bottom: 8px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .pcm-price {
+        font-weight: 700;
+        font-size: 16px;
+        color: #202124;
+      }
+
+      .pcm-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 8px;
+      }
+    }
+
     .form-group {
       margin-bottom: 16px;
     }
@@ -527,17 +644,20 @@
     <table class="product-table">
       <thead>
         <tr>
-          <th>Imagen</th>
+          <th style="width:70px;">Imagen</th>
           <th>Producto</th>
           <th>Presentación</th>
           <th>Código</th>
           <th>Stock</th>
           <th>Precio</th>
-          <th></th>
+          <th style="text-align:right;">Acción</th>
         </tr>
       </thead>
       <tbody id="product-tbody"></tbody>
     </table>
+
+    <!-- Mobile View Container -->
+    <div id="product-grid-mobile" class="product-grid-mobile"></div>
 
     <div id="catalog-status" class="status"></div>
     <div id="pagination" class="pagination"></div>
@@ -828,6 +948,38 @@
       const searchText = state.search ? ` (búsqueda: "${state.search}")` : '';
       document.getElementById('catalog-status').textContent =
         `Mostrando ${items.length} de ${data.total} productos${searchText}. Página ${data.page} de ${data.totalPages}.`;
+
+      // RENDER MOBILE GRID
+      const mobileGrid = document.getElementById('product-grid-mobile');
+      mobileGrid.innerHTML = items.map(p => {
+        const stockColor = p.stock ? '#137333' : '#c5221f';
+        const stockText = p.stock ? 'Stock' : 'Sin Stock';
+        const btnDisabled = p.stock ? '' : 'disabled';
+        const btnText = p.stock ? 'Agregar' : 'Agotado';
+        const packInfo = p.pack ? `<span style="background:#e8f0fe;color:#1967d2;padding:2px 6px;border-radius:4px;">${p.pack}</span>` : '';
+
+        const safeJSON = JSON.stringify(p).replace(/"/g, '&quot;');
+
+        return `
+         <div class="product-card-mobile">
+            <img src="${p.img}" class="pcm-img" loading="lazy" onerror="this.src='https://via.placeholder.com/80?text=No+Img'">
+            <div class="pcm-info">
+               <div class="pcm-title">${p.name}</div>
+               <div class="pcm-meta">
+                  <span>${p.code}</span>
+                  ${packInfo}
+               </div>
+               <div class="pcm-actions">
+                  <div>
+                    <div style="font-size:11px;font-weight:600;color:${stockColor};margin-bottom:2px;">${stockText}</div>
+                    <div class="pcm-price">${money(p.price)}</div>
+                  </div>
+                  <button class="btn-add" ${btnDisabled} onclick="addToCart('${p.id}')">${btnText}</button>
+               </div>
+            </div>
+         </div>
+         `;
+      }).join('');
 
       updateDashboard();
       renderPagination();
