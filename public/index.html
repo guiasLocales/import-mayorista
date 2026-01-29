@@ -46,10 +46,26 @@
       margin-bottom: 12px;
     }
 
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header-logo {
+      height: 70px;
+      /* Tamaño generoso para el logo */
+      width: auto;
+      object-fit: contain;
+    }
+
     .header-title {
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 600;
       color: #202124;
+      border-left: 1px solid #dadce0;
+      padding-left: 16px;
+      line-height: 1.2;
     }
 
     /* LEYENDA COMERCIAL (REGLAS DE NEGOCIO VISIBLES) */
@@ -625,10 +641,10 @@
   <div class="header">
     <div class="header-container">
       <div class="header-top">
-        <div>
+        <div class="header-brand">
+          <img src="logo.png" alt="Import.cba Mayorista" class="header-logo">
+          <!-- El título mostrará solo la Categoría -->
           <div class="header-title" id="page-title"></div>
-          <!-- Leyenda comercial: Mínimos y Descuentos -->
-          <div class="header-legend" id="page-legend"></div>
         </div>
 
         <button class="cart-button" onclick="openCart()">
@@ -636,8 +652,12 @@
           <span id="cart-count" class="cart-badge">0</span>
         </button>
       </div>
+
+      <!-- Leyenda comercial: Mínimos y Descuentos -->
+      <div class="header-legend" id="page-legend" style="margin-top: 8px;"></div>
+
       <!-- Barra de KPIs (Resumen rápido) -->
-      <div id="dashboard-bar" class="dashboard-bar"></div>
+      <div id="dashboard-bar" class="dashboard-bar" style="margin-top: 16px;"></div>
     </div>
   </div>
 
@@ -861,8 +881,8 @@
 
     // INICIALIZACIÓN
     function init() {
-      document.getElementById('page-title').textContent =
-        `Catálogo de Productos - Import Mayorista - ${CATEGORY}`;
+      // El título ahora solo muestra la categoría, ya que el logo dice el nombre
+      document.getElementById('page-title').textContent = CATEGORY;
 
       document.getElementById('page-legend').innerHTML =
         `<strong>Compra mínima:</strong> ${money(ORDER_RULES.MIN_TOTAL)} · ` +
