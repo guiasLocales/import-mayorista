@@ -551,17 +551,22 @@
         align-items: center;
       }
 
-      .pcm-price {
+      .pcm-price {}
+
+      .qty-controls {
+        margin-top: 0;
+      }
+
+      .cart-item-total {
         font-weight: 700;
         font-size: 16px;
         color: #202124;
+        text-align: right;
       }
 
-      .pcm-actions {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-top: 8px;
+      /* Hide old total div if exists in previous HTML structure */
+      .cart-item>div:last-child {
+        display: none;
       }
     }
 
@@ -1110,24 +1115,36 @@
 
       const rows = cart.map((it, idx) => {
         const packSize = parsePackQuantity(it.pack);
+        // Nueva estructura que soporta grid móvil y flex desktop
         return `
         <div class="cart-item">
           <img src="${it.img}" onerror="this.src='https://via.placeholder.com/60'">
+          
           <div class="cart-item-main">
-            <div><strong>${it.name}</strong></div>
-            <div style="font-size:12px;color:#5f6368;margin-top:4px;">Cód: ${it.code}</div>
-            <div style="margin-top:6px;">Precio: <strong>${money(it.price)}</strong></div>
-            <div class="qty-controls">
-              <button onclick="changeQty(${idx}, -1)">-</button>
-              <input type="number" min="${packSize}" step="${packSize}" value="${it.qty}" onchange="setQty(${idx}, this.value)">
-              <button onclick="changeQty(${idx}, 1)">+</button>
-              <button onclick="removeItem(${idx})" style="margin-left:8px;color:#ea4335;">Quitar</button>
+            <div class="cart-item-header">
+               <div class="cart-item-title">${it.name}</div>
+               <button class="btn-remove-icon" onclick="removeItem(${idx})">×</button>
             </div>
-            ${packSize > 1 ? `<div style="font-size:11px;color:#1a73e8;margin-top:2px;">Pack: ${packSize} u.</div>` : ''}
+            
+            <div class="cart-item-meta">
+               Cód: ${it.code} · Precio: <strong>${money(it.price)}</strong>
+               ${packSize > 1 ? `<span style="color:#1a73e8; margin-left:6px;">(Pack ${packSize} u.)</span>` : ''}
+            </div>
+
+            <div class="cart-item-controls-row">
+              <div class="qty-controls">
+                <button onclick="changeQty(${idx}, -1)">-</button>
+                <input type="number" min="${packSize}" step="${packSize}" value="${it.qty}" onchange="setQty(${idx}, this.value)">
+                <button onclick="changeQty(${idx}, 1)">+</button>
+              </div>
+              <div class="cart-item-total">
+                ${money(it.price * it.qty)}
+              </div>
+            </div>
           </div>
-          <div style="text-align:right;font-weight:600;font-size:16px;">
-            ${money(it.price * it.qty)}
-          </div>
+          
+          <!-- Elemento fantasma para mantener compatibilidad con desktop si no usas grid en desktop -->
+          <div style="display:none;"></div> 
         </div>
       `;
       }).join('');
