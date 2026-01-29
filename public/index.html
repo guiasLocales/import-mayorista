@@ -1027,7 +1027,8 @@
 
         return `
           <tr>
-            <td><img src="${p.img}" alt="${p.name}" loading="lazy" onclick="openImageModal('${p.img}')"></td>
+          <tr>
+            <td><img src="${p.img}" alt="${p.name}" loading="lazy" onclick="openImageModal('${p.bigImg || p.img}')"></td>
             <td style="font-weight:500; color:#202124;">${p.name}</td>
             <td style="color:#5f6368; font-size:13px;">${p.pack || '-'}</td>
             <td style="color:#5f6368;">${p.code}</td>
@@ -1057,7 +1058,7 @@
 
         return `
          <div class="product-card-mobile">
-            <img src="${p.img}" class="pcm-img" loading="lazy" onerror="this.src='https://via.placeholder.com/80?text=No+Img'" onclick="openImageModal('${p.img}')">
+            <img src="${p.img}" class="pcm-img" loading="lazy" onerror="this.src='https://via.placeholder.com/80?text=No+Img'" onclick="openImageModal('${p.bigImg || p.img}')">
             <div class="pcm-info">
                <div class="pcm-title">${p.name}</div>
                <div class="pcm-meta">

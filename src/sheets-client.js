@@ -39,7 +39,8 @@ export async function readProducts(env, category) {
         price: headers.indexOf('price'),
         stockFlag: headers.indexOf('product_use_stock'),
         img: headers.indexOf('full_image_url'),
-        pack: headers.indexOf('search_codes'), // New column
+        pack: headers.indexOf('search_codes'),
+        bigImg: headers.indexOf('full_image_url_big_picture'), // New column
     };
 
     // Integrity Check
@@ -68,6 +69,7 @@ export async function readProducts(env, category) {
                 price: Number(r[idx.price] || 0),
                 img: String(r[idx.img] || ''),
                 pack: (idx.pack !== -1) ? String(r[idx.pack] || '') : '',
+                bigImg: (idx.bigImg !== -1) ? String(r[idx.bigImg] || '') : '',
                 stock: hasStock,
             };
         });
