@@ -1,4 +1,4 @@
-import { readProducts, appendOrder, readConfig } from './sheets-client.js';
+import { readProducts, appendOrder, readConfig, readCategories } from './sheets-client.js';
 import { ORDER_RULES, isValidEmail } from './utils.js';
 
 export default {
@@ -10,6 +10,9 @@ export default {
             // API ROUTES
             if (path === '/api/products') {
                 return await handleGetProducts(request, env, url);
+            }
+            if (path === '/api/categories') {
+                return await handleGetCategories(env);
             }
             if (path === '/api/orders' && request.method === 'POST') {
                 return await handleSaveOrder(request, env);
@@ -144,6 +147,13 @@ async function handleSaveOrder(request, env) {
         total: finalTotal,
         items: order.items.length
     }), {
+        headers: { 'Content-Type': 'application/json' }
+    });
+}
+
+async function handleGetCategories(env) {
+    const categories = await readCategories(env);
+    return new Response(JSON.stringify({ categories }), {
         headers: { 'Content-Type': 'application/json' }
     });
 }
