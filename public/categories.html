@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import.cba Mayorista - Categorías</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 30px 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo {
+            max-width: 300px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #4a5568;
+            font-size: 1.1rem;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .category-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .category-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .category-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .category-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .category-icon {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        }
+
+        .category-name {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .category-subtitle {
+            font-size: 0.9rem;
+            color: #718096;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .categories-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 15px;
+            }
+
+            .category-card {
+                padding: 20px;
+            }
+
+            .category-icon {
+                font-size: 2.5rem;
+            }
+
+            .category-name {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="logo.png" alt="Import.cba Mayorista" class="logo">
+            <h1>Catálogo Mayorista</h1>
+            <p>Selecciona una categoría para ver los productos</p>
+        </div>
+
+        <div id="content">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p>Cargando categorías...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Emoji icons for different categories
+        const categoryIcons = {
+            'LIBRERIA': '📚',
+            'JUGUETERIA': '🧸',
+            'BAZAR': '🏠',
+            'FERRETERIA': '🔧',
+            'ELECTRONICA': '💻',
+            'ROPA': '👕',
+            'DEPORTES': '⚽',
+            'ALIMENTOS': '🍕',
+            'DEFAULT': '📦'
+        };
+
+        async function loadCategories() {
+            try {
+                const response = await fetch('/api/categories');
+                if (!response.ok) {
+                    throw new Error('Error al cargar categorías');
+                }
+
+                const data = await response.json();
+                const categories = data.categories || [];
+
+                if (categories.length === 0) {
+                    document.getElementById('content').innerHTML = `
+            <div class="error">
+              <h2>No se encontraron categorías</h2>
+              <p>Verifica que la hoja 'llamada_appscript' exista en el Google Sheet.</p>
+            </div>
+          `;
+                    return;
+                }
+
+                renderCategories(categories);
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('content').innerHTML = `
+          <div class="error">
+            <h2>Error al cargar categorías</h2>
+            <p>${error.message}</p>
+          </div>
+        `;
+            }
+        }
+
+        function renderCategories(categories) {
+            const grid = categories.map(cat => {
+                const icon = categoryIcons[cat.toUpperCase()] || categoryIcons['DEFAULT'];
+                const cleanName = cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase();
+
+                return `
+          <div class="category-card" onclick="navigateToCategory('${cat}')">
+            <div class="category-icon">${icon}</div>
+            <div class="category-name">${cleanName}</div>
+            <div class="category-subtitle">Ver productos</div>
+          </div>
+        `;
+            }).join('');
+
+            document.getElementById('content').innerHTML = `
+        <div class="categories-grid">
+          ${grid}
+        </div>
+      `;
+        }
+
+        function navigateToCategory(category) {
+            // Navigate to the category-specific page
+            window.location.href = `/?category=${encodeURIComponent(category)}`;
+        }
+
+        // Load categories on page load
+        loadCategories();
+    </script>
+</body>
+
+</html>

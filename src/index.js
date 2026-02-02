@@ -1,4 +1,4 @@
-import { readProducts, appendOrder, readConfig } from './sheets-client.js';
+import { readProducts, appendOrder, readConfig, readCategories } from './sheets-client.js';
 import { ORDER_RULES, isValidEmail } from './utils.js';
 
 export default {
@@ -11,6 +11,9 @@ export default {
             if (path === '/api/products') {
                 return await handleGetProducts(request, env, url);
             }
+            if (path === '/api/categories') {
+                return await handleGetCategories(request, env);
+            }
             if (path === '/api/orders' && request.method === 'POST') {
                 return await handleSaveOrder(request, env);
             }
@@ -19,9 +22,30 @@ export default {
             // Serve static assets from the binding
             let response = await env.ASSETS.fetch(request);
 
-            // If it's the index page (root or index.html), inject the category
-            if (response.ok && (path === '/' || path === '/index.html')) {
-                const category = env.DEFAULT_CATEGORY || 'LIBRERIA';
+            // If it's the root path, check for category parameter
+            if (response.ok && path === '/') {
+                const categoryParam = url.searchParams.get('category');
+
+                if (!categoryParam) {
+                    // No category specified, show categories page
+                    response = await env.ASSETS.fetch(new Request(new URL('/categories.html', request.url)));
+                    return response;
+                } else {
+                    // Category specified, show index.html with that category
+                    return new HTMLRewriter()
+                        .on('#meta-category', {
+                            element(element) {
+                                element.setAttribute('content', categoryParam);
+                            }
+                        })
+                        .transform(response);
+                }
+            }
+
+            // If it's index.html directly, use DEFAULT_CATEGORY or URL param
+            if (response.ok && path === '/index.html') {
+                const categoryParam = url.searchParams.get('category');
+                const category = categoryParam || env.DEFAULT_CATEGORY || 'LIBRERIA';
 
                 return new HTMLRewriter()
                     .on('#meta-category', {
@@ -143,6 +167,20 @@ async function handleSaveOrder(request, env) {
         discount,
         total: finalTotal,
         items: order.items.length
+    }), {
+        headers: { 'Content-Type': 'application/json' }
+    });
+}
+
+/**
+ * GET /api/categories
+ * Returns all available categories from llamada_appscript sheet
+ */
+async function handleGetCategories(request, env) {
+    const categories = await readCategories(env);
+
+    return new Response(JSON.stringify({
+        categories
     }), {
         headers: { 'Content-Type': 'application/json' }
     });
