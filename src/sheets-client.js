@@ -195,3 +195,21 @@ export async function readConfig(env) {
         return null;
     }
 }
+
+export async function readCategories(env) {
+    const token = await getAccessToken(env.GOOGLE_CLIENT_EMAIL, env.GOOGLE_PRIVATE_KEY);
+    const url = `${SHEETS_API_BASE}/${env.SPREADSHEET_ID}/values/llamada_appscript!A:Z?majorDimension=ROWS`;
+
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) return [];
+
+    const data = await res.json();
+    const rows = data.values;
+    if (!rows || rows.length < 2) return [];
+
+    const headers = rows[0].map(h => String(h).trim());
+    const dataRows = rows.slice(1);
+    const categoryIdx = headers.indexOf('categoria') !== -1 ? headers.indexOf('categoria') : 0;
+
+    return [...new Set(dataRows.map(row => String(row[categoryIdx] || '').trim()).filter(cat => cat))];
+}
