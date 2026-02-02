@@ -18,29 +18,31 @@ export default {
                 return await handleSaveOrder(request, env);
             }
 
-            // FRONTEND (Static Assets + HTMLRewriter)
-            // Serve static assets from the binding
-            let response = await env.ASSETS.fetch(request);
 
-            // If it's the root path, check for category parameter
-            if (response.ok && path === '/') {
+            // FRONTEND (Static Assets + HTMLRewriter)
+            // Check if it's the root path first
+            if (path === '/') {
                 const categoryParam = url.searchParams.get('category');
 
                 if (!categoryParam) {
-                    // No category specified, show categories page
-                    response = await env.ASSETS.fetch(new Request(new URL('/categories.html', request.url)));
-                    return response;
+                    // No category specified, serve categories page
+                    const categoriesRequest = new Request(new URL('/categories.html', request.url));
+                    return await env.ASSETS.fetch(categoriesRequest);
                 } else {
-                    // Category specified, show index.html with that category
+                    // Category specified, serve index.html with that category
+                    const indexResponse = await env.ASSETS.fetch(request);
                     return new HTMLRewriter()
                         .on('#meta-category', {
                             element(element) {
                                 element.setAttribute('content', categoryParam);
                             }
                         })
-                        .transform(response);
+                        .transform(indexResponse);
                 }
             }
+
+            // Serve static assets from the binding
+            let response = await env.ASSETS.fetch(request);
 
             // If it's index.html directly, use DEFAULT_CATEGORY or URL param
             if (response.ok && path === '/index.html') {
