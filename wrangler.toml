@@ -1,7 +1,6 @@
 name = "catalogo-mayorista"
 main = "src/index.js"
 compatibility_date = "2024-01-01"
-# Updated: 2026-02-02
 
 [vars]
 DEFAULT_CATEGORY = "LIBRERIA"
