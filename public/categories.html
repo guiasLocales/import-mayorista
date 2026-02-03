@@ -174,44 +174,67 @@
     <div class="container">
         <div class="header">
             <img src="logo.png" alt="Import.cba Mayorista" class="logo">
-            <h1>Catálogo Mayorista</h1>
-            <p>Selecciona una categoría para ver los productos</p>
+            <h1>Catalogo Mayorista</h1>
+            <p>Selecciona una categoria para ver los productos</p>
         </div>
         <div id="content">
             <div class="loading">
                 <div class="loading-spinner"></div>
-                <p>Cargando categorías...</p>
+                <p>Cargando categorias...</p>
             </div>
         </div>
     </div>
     <script>
-           st categoryIcons = {
-      'LIBRERIA': '         'JUGUETERIA': '🧸', 'BA            '🏠', 'FERRETERIA'            ,
-      'ELECTRONICA            ', 'ROPA': '👕'            ORTES': '⚽', 'ALIMEN            '🍕', 'DEFAULT': '📦'            ;
-    async fu             loadCategories()               try {
-        co            sponse = await f        ('/a        ategories');
-        if (!response            hrow n                ('Error al cargar categorías');
-        const dat                t response.json();
-                     st categories = data.categories || [];
-                        gor                th === 0) {
-          document.getEl                d('content').innerHTML = '<div class="error                 se encontraron categorías</h2>                             return;
+        var categoryIcons = {
+            'LIBRERIA': '📚',
+            'JUGUETERIA': '🧸',
+            'BAZAR': '🏠',
+            'FERRETERIA': '🔧',
+            'ELECTRONICA': '💻',
+            'INDUMENTARIA': '👕',
+            'BELLEZA': '💄',
+            'NAVIDAD': '🎄',
+            'BIJOUTERIE': '💎',
+            'TELEFONIA': '📱',
+            'DEFAULT': '📦'
+        };
+
+        async function loadCategories() {
+            try {
+                var response = await fetch('/api/categories');
+                if (!response.ok) throw new Error('Error al cargar categorias');
+                var data = await response.json();
+                var categories = data.categories || [];
+                if (categories.length === 0) {
+                    document.getElementById('content').innerHTML = '<div class="error"><h2>No se encontraron categorias</h2></div>';
+                    return;
+                }
+                renderCategories(categories);
+            } catch (error) {
+                document.getElementById('content').innerHTML = '<div class="error"><h2>Error al cargar categorias</h2><p>' + error.message + '</p></div>';
+            }
         }
-        renderCategories(categories);
-      } catch (error) {
-        document.getElementById('content').innerHTML = '<div class="error"><h2>Error al cargar categorías</h2><p>' + error.message + '</p></div>';
-      }
-    }
-                        enderCat                cat                 {
-      const grid = categori            (cat => {
-                        on = categoryIcons[cat.toUpperCa                 categoryIcons['DEFAULT'];
-        const cleanName = cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase();
-        return '<div class="category-card" onclick="navigateToCategory(\'' + cat            )"        v c        ="category-icon">' + icon + '</div><div             "category-name">' + cleanName + '</di                lass="category-subtitle">Ver productos</div></div>';
-      }).join('');
-                   ent.getElementById('content').innerHTML = '<div class="categories-grid">' + <                    }
-    function navigateToCategory(category) {
-      window.location.href = '/?category=' + encodeURIComponent(category);
-    }
-    loadCategories();
+
+        function renderCategories(categories) {
+            var grid = '';
+            for (var i = 0; i < categories.length; i++) {
+                var cat = categories[i];
+                var icon = categoryIcons[cat.toUpperCase()] || categoryIcons['DEFAULT'];
+                var cleanName = cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase();
+                grid += '<div class="category-card" onclick="navigateToCategory(\'' + cat + '\')">';
+                grid += '<div class="category-icon">' + icon + '</div>';
+                grid += '<div class="category-name">' + cleanName + '</div>';
+                grid += '<div class="category-subtitle">Ver productos</div>';
+                grid += '</div>';
+            }
+            document.getElementById('content').innerHTML = '<div class="categories-grid">' + grid + '</div>';
+        }
+
+        function navigateToCategory(category) {
+            window.location.href = '/?category=' + encodeURIComponent(category);
+        }
+
+        loadCategories();
     </script>
 </body>
 
