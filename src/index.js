@@ -31,16 +31,16 @@ export default {
             }
 
             if (isRootPath && categoryParam) {
-                // Category specified, serve index.html with that category
-                const indexUrl = new URL('/index.html', request.url);
-                const indexResponse = await env.ASSETS.fetch(new Request(indexUrl, request));
+                // Category specified, serve catalog.html with that category
+                const catalogUrl = new URL('/catalog.html', request.url);
+                const catalogResponse = await env.ASSETS.fetch(new Request(catalogUrl, request));
                 return new HTMLRewriter()
                     .on('#meta-category', {
                         element(element) {
                             element.setAttribute('content', categoryParam);
                         }
                     })
-                    .transform(indexResponse);
+                    .transform(catalogResponse);
             }
 
             // Serve static assets from the binding for other paths
