@@ -222,17 +222,14 @@
                 var cat = categories[i];
                 var icon = categoryIcons[cat.toUpperCase()] || categoryIcons['DEFAULT'];
                 var cleanName = cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase();
-                grid += '<div class="category-card" onclick="navigateToCategory(\'' + cat + '\')">';
+                var url = '/?category=' + encodeURIComponent(cat);
+                grid += '<a href="' + url + '" class="category-card" style="text-decoration:none;">';
                 grid += '<div class="category-icon">' + icon + '</div>';
                 grid += '<div class="category-name">' + cleanName + '</div>';
                 grid += '<div class="category-subtitle">Ver productos</div>';
-                grid += '</div>';
+                grid += '</a>';
             }
             document.getElementById('content').innerHTML = '<div class="categories-grid">' + grid + '</div>';
-        }
-
-        function navigateToCategory(category) {
-            window.location.href = '/?category=' + encodeURIComponent(category);
         }
 
         loadCategories();
