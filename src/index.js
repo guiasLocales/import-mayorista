@@ -19,28 +19,27 @@ export default {
             }
 
 
+
             // FRONTEND (Static Assets + HTMLRewriter)
-            // Check if it's root path or index.html
-            const isRootPath = path === '/' || path === '/index.html';
             const categoryParam = url.searchParams.get('category');
 
-            if (isRootPath && !categoryParam) {
-                // No category specified, serve categories page
+            // Root path without category -> show categories page
+            if (path === '/' && !categoryParam) {
                 const categoriesUrl = new URL('/categories.html', request.url);
                 return await env.ASSETS.fetch(new Request(categoriesUrl, request));
             }
 
-            if (isRootPath && categoryParam) {
-                // Category specified, serve catalog.html with that category
+            // Root path with category -> redirect to /catalog?category=XXX
+            if (path === '/' && categoryParam) {
+                const redirectUrl = new URL('/catalog', request.url);
+                redirectUrl.searchParams.set('category', categoryParam);
+                return Response.redirect(redirectUrl.toString(), 302);
+            }
+
+            // Catalog path - serve catalog.html (category is in URL params)
+            if (path === '/catalog' || path === '/catalog.html') {
                 const catalogUrl = new URL('/catalog.html', request.url);
-                const catalogResponse = await env.ASSETS.fetch(new Request(catalogUrl, request));
-                return new HTMLRewriter()
-                    .on('#meta-category', {
-                        element(element) {
-                            element.setAttribute('content', categoryParam);
-                        }
-                    })
-                    .transform(catalogResponse);
+                return await env.ASSETS.fetch(new Request(catalogUrl, request));
             }
 
             // Serve static assets from the binding for other paths

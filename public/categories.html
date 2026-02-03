@@ -222,7 +222,7 @@
                 var cat = categories[i];
                 var icon = categoryIcons[cat.toUpperCase()] || categoryIcons['DEFAULT'];
                 var cleanName = cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase();
-                var url = '/?category=' + encodeURIComponent(cat);
+                var url = '/catalog?category=' + encodeURIComponent(cat);
                 grid += '<a href="' + url + '" class="category-card" style="text-decoration:none;">';
                 grid += '<div class="category-icon">' + icon + '</div>';
                 grid += '<div class="category-name">' + cleanName + '</div>';
