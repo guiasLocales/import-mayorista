@@ -207,9 +207,15 @@ export async function readCategories(env) {
     const rows = data.values;
     if (!rows || rows.length < 2) return [];
 
-    const headers = rows[0].map(h => String(h).trim());
+    const headers = rows[0].map(h => String(h).trim().toLowerCase());
     const dataRows = rows.slice(1);
-    const categoryIdx = headers.indexOf('categoria') !== -1 ? headers.indexOf('categoria') : 0;
 
-    return [...new Set(dataRows.map(row => String(row[categoryIdx] || '').trim()).filter(cat => cat))];
+    // Look for product_type_path column
+    let categoryIdx = headers.findIndex(h => h === 'product_type_path');
+
+    // If not found, return empty
+    if (categoryIdx === -1) return [];
+
+    // Extract unique categories, filtering out empty values and numeric-only values
+    return [...new Set(dataRows.map(row => String(row[categoryIdx] || '').trim()).filter(cat => cat && !cat.match(/^\d+$/)))];
 }
