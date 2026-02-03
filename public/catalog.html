@@ -719,6 +719,13 @@
   <section class="content">
     <div class="toolbar">
       <input id="search-input" placeholder="Buscar por nombre o código..." oninput="onSearchChange()">
+      <select id="page-size-select" onchange="onPageSizeChange()"
+        style="padding: 12px 16px; border-radius: 8px; border: 1px solid #dadce0; font-size: 14px; margin-left: 10px; cursor: pointer;">
+        <option value="24">24 por página</option>
+        <option value="48">48 por página</option>
+        <option value="96">96 por página</option>
+        <option value="200">200 por página</option>
+      </select>
     </div>
 
     <table class="product-table">
@@ -818,9 +825,10 @@
     const CATEGORY = rawCat;
 
     // Estado global de la aplicación
+    const savedPageSize = parseInt(localStorage.getItem('pageSize_' + CATEGORY)) || 24;
     const state = {
       page: 1,
-      pageSize: 24,
+      pageSize: savedPageSize,
       totalPages: 1,
       search: '',
       totalProducts: 0,
@@ -951,6 +959,9 @@
         `<strong>Compra mínima:</strong> ${money(ORDER_RULES.MIN_TOTAL)} · ` +
         `<strong>20% OFF</strong> desde ${money(ORDER_RULES.DISCOUNT_THRESHOLD)}.`;
 
+      // Initialize page size selector with saved value
+      document.getElementById('page-size-select').value = state.pageSize;
+
       loadCartFromStorage();
       loadPage();
     }
@@ -959,6 +970,15 @@
     function onSearchChange() {
       state.search = document.getElementById('search-input').value.trim();
       state.page = 1;
+      loadPage();
+    }
+
+    function onPageSizeChange() {
+      const select = document.getElementById('page-size-select');
+      const newSize = parseInt(select.value);
+      state.pageSize = newSize;
+      state.page = 1;
+      localStorage.setItem('pageSize_' + CATEGORY, newSize);
       loadPage();
     }
 
