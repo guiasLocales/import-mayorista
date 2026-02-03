@@ -802,14 +802,18 @@
        LÓGICA DEL CLIENTE (JS)
        ========================================== -->
   <script>
+    // VERSION 2026-02-03-0020
     // Recover CATEGORY from URL parameter first, then meta tag, then default
     const urlParams = new URLSearchParams(window.location.search);
     let rawCat = urlParams.get('category');
+    console.log('URL category param:', rawCat);
     if (!rawCat) {
       const metaEl = document.getElementById('meta-category');
       rawCat = metaEl ? metaEl.content : null;
+      console.log('Meta tag category:', rawCat);
     }
     if (!rawCat || rawCat === '{{CATEGORY}}') rawCat = 'LIBRERIA';
+    console.log('Final CATEGORY:', rawCat);
 
     const CATEGORY = rawCat;
 
