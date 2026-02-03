@@ -20,45 +20,31 @@ export default {
 
 
             // FRONTEND (Static Assets + HTMLRewriter)
-            // Check if it's the root path first
-            if (path === '/') {
-                const categoryParam = url.searchParams.get('category');
+            // Check if it's root path or index.html
+            const isRootPath = path === '/' || path === '/index.html';
+            const categoryParam = url.searchParams.get('category');
 
-                if (!categoryParam) {
-                    // No category specified, serve categories page
-                    const categoriesRequest = new Request(new URL('/categories.html', request.url));
-                    return await env.ASSETS.fetch(categoriesRequest);
-                } else {
-                    // Category specified, serve index.html with that category
-                    const indexResponse = await env.ASSETS.fetch(request);
-                    return new HTMLRewriter()
-                        .on('#meta-category', {
-                            element(element) {
-                                element.setAttribute('content', categoryParam);
-                            }
-                        })
-                        .transform(indexResponse);
-                }
+            if (isRootPath && !categoryParam) {
+                // No category specified, serve categories page
+                const categoriesUrl = new URL('/categories.html', request.url);
+                return await env.ASSETS.fetch(new Request(categoriesUrl, request));
             }
 
-            // Serve static assets from the binding
-            let response = await env.ASSETS.fetch(request);
-
-            // If it's index.html directly, use DEFAULT_CATEGORY or URL param
-            if (response.ok && path === '/index.html') {
-                const categoryParam = url.searchParams.get('category');
-                const category = categoryParam || env.DEFAULT_CATEGORY || 'LIBRERIA';
-
+            if (isRootPath && categoryParam) {
+                // Category specified, serve index.html with that category
+                const indexUrl = new URL('/index.html', request.url);
+                const indexResponse = await env.ASSETS.fetch(new Request(indexUrl, request));
                 return new HTMLRewriter()
                     .on('#meta-category', {
                         element(element) {
-                            element.setAttribute('content', category);
+                            element.setAttribute('content', categoryParam);
                         }
                     })
-                    .transform(response);
+                    .transform(indexResponse);
             }
 
-            return response;
+            // Serve static assets from the binding for other paths
+            return await env.ASSETS.fetch(request);
 
         } catch (e) {
             return new Response(JSON.stringify({ error: e.message }), {
