@@ -802,9 +802,13 @@
        LÓGICA DEL CLIENTE (JS)
        ========================================== -->
   <script>
-    // Recuperar CATEGORY desde el Meta Tag inyectado por el Worker
-    let rawCat = document.getElementById('meta-category').content;
-    // Fallback de seguridad si falla la inyección del HTMLRewriter
+    // Recover CATEGORY from URL parameter first, then meta tag, then default
+    const urlParams = new URLSearchParams(window.location.search);
+    let rawCat = urlParams.get('category');
+    if (!rawCat) {
+      const metaEl = document.getElementById('meta-category');
+      rawCat = metaEl ? metaEl.content : null;
+    }
     if (!rawCat || rawCat === '{{CATEGORY}}') rawCat = 'LIBRERIA';
 
     const CATEGORY = rawCat;
