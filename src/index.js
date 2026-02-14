@@ -1,6 +1,8 @@
 import { readProducts, appendOrder, readConfig, readCategories } from './sheets-client.js';
 import { ORDER_RULES, isValidEmail } from './utils.js';
 
+// Version: Stock numeric display fix - 2026-02-14
+
 export default {
     async fetch(request, env, ctx) {
         const url = new URL(request.url);
