@@ -1057,7 +1057,7 @@
 
       tbody.innerHTML = items.map(p => {
         const stockBadge = p.stock
-          ? '<span class="stock-badge in-stock">Stock</span>'
+          ? `<span class="stock-badge in-stock">Stock ${typeof p.stock === 'number' ? `(${p.stock})` : ''}</span>`
           : '<span class="stock-badge out-of-stock">Sin Stock</span>';
 
         const btnDisabled = p.stock ? '' : 'disabled';

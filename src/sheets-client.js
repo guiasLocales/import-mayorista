@@ -29,6 +29,7 @@ export async function readProducts(env, category) {
     if (!rows || rows.length < 2) return [];
 
     const headers = rows[0].map(h => String(h).trim());
+    const headersLower = headers.map(h => h.toLowerCase());
     const dataRows = rows.slice(1);
 
     // Dynamic Column Mapping
@@ -37,16 +38,24 @@ export async function readProducts(env, category) {
         code: headers.indexOf('product_code'),
         name: headers.indexOf('product_name'),
         price: headers.indexOf('price'),
-        stockFlag: headers.indexOf('product_use_stock'),
+        // Detect stock column using various common names
+        stockFlag: headersLower.findIndex(h => h === 'product_use_stock' || h === 'stock' || h === 'cantidad' || h === 'stk'),
         img: headers.indexOf('full_image_url'),
         pack: headers.indexOf('search_codes'),
         bigImg: headers.indexOf('full_image_url_big_picture'), // New column
     };
 
     // Integrity Check
-    const required = ['product_code', 'product_name', 'price', 'product_use_stock', 'full_image_url'];
+    // Removed 'product_use_stock' from required list as we do a flexible check below
+    const required = ['product_code', 'product_name', 'price', 'full_image_url'];
     for (const r of required) {
         if (headers.indexOf(r) === -1) throw new Error(`Missing column '${r}' in sheet '${category}'`);
+    }
+
+    // Ensure we found a stock column
+    if (idx.stockFlag === -1) {
+        // Fallback: if not found, maybe warn or error? prioritizing error for safety
+        throw new Error(`Missing stock column (product_use_stock, stock, or cantidad) in sheet '${category}'`);
     }
 
     // Filter and Map
@@ -57,7 +66,25 @@ export async function readProducts(env, category) {
         })
         .map(r => {
             const stockCell = r[idx.stockFlag];
-            const hasStock = String(stockCell).toLowerCase() === 'true';
+
+            // Logic to handle boolean (TRUE/FALSE) or Numeric Quantity
+            let stockValue = false;
+            const sVal = String(stockCell || '').toLowerCase().trim();
+
+            if (sVal === 'true') {
+                stockValue = true;
+            } else if (sVal === 'false') {
+                stockValue = false;
+            } else {
+                // Try parsing as number
+                const num = parseFloat(sVal);
+                // logic: if it's a number > 0, we have stock. 
+                // We return the number so frontend can optionally display it.
+                // 0 or negative is treated as no stock (0 is falsy in JS).
+                if (!isNaN(num)) {
+                    stockValue = num > 0 ? num : 0;
+                }
+            }
 
             const idVal = (idx.id !== -1) ? r[idx.id] : '';
             const codeVal = r[idx.code];
@@ -70,7 +97,7 @@ export async function readProducts(env, category) {
                 img: String(r[idx.img] || ''),
                 pack: (idx.pack !== -1) ? String(r[idx.pack] || '') : '',
                 bigImg: (idx.bigImg !== -1) ? String(r[idx.bigImg] || '') : '',
-                stock: hasStock,
+                stock: stockValue,
             };
         });
 }
