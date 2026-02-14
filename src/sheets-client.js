@@ -67,13 +67,18 @@ export async function readProducts(env, category) {
         .map(r => {
             const stockCell = r[idx.stockFlag];
 
+            // Debug: Log first 3 stock values to see what we're getting from Sheets
+            if (r[idx.code] && Math.random() < 0.003) {
+                console.log('Stock cell raw value:', stockCell, 'type:', typeof stockCell);
+            }
+
             // Logic to handle boolean (TRUE/FALSE) or Numeric Quantity
             let stockValue = false;
             const sVal = String(stockCell || '').toLowerCase().trim();
 
             if (sVal === 'true') {
                 stockValue = true;
-            } else if (sVal === 'false') {
+            } else if (sVal === 'false' || sVal === '') {
                 stockValue = false;
             } else {
                 // Try parsing as number
