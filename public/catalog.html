@@ -1220,6 +1220,13 @@
       const qtyToAdd = parsePackQuantity(product.pack);
 
       const existing = cart.find(it => it.id === product.id);
+      const currentQtyInCart = existing ? existing.qty : 0;
+
+      if (typeof product.stock === 'number' && (currentQtyInCart + qtyToAdd > product.stock)) {
+        alert(`No puedes agregar más unidades. Stock disponible: ${product.stock}`);
+        return;
+      }
+
       if (existing) {
         existing.qty += qtyToAdd;
       } else {
@@ -1319,7 +1326,14 @@
       const packSize = parsePackQuantity(it.pack);
       const step = packSize;
 
-      cart[idx].qty = Math.max(step, cart[idx].qty + (delta * step));
+      let newQty = Math.max(step, cart[idx].qty + (delta * step));
+
+      if (typeof it.stock === 'number' && newQty > it.stock) {
+        alert(`No puedes superar el stock disponible (${it.stock})`);
+        return;
+      }
+
+      cart[idx].qty = newQty;
       saveCartToStorage(); renderCart(); updateCartBadge();
     }
 
@@ -1335,7 +1349,16 @@
         if (n === 0) n = packSize;
       }
 
-      cart[idx].qty = Math.max(packSize, n);
+      let finalQty = Math.max(packSize, n);
+
+      if (typeof it.stock === 'number' && finalQty > it.stock) {
+        alert(`No puedes superar el stock disponible (${it.stock})`);
+        // Intentar ajustar al máximo múltiplo posible dentro del stock
+        const maxValid = Math.floor(it.stock / packSize) * packSize;
+        finalQty = maxValid > 0 ? maxValid : cart[idx].qty; // Revertir si no alcanza para un pack
+      }
+
+      cart[idx].qty = finalQty;
       saveCartToStorage(); renderCart(); updateCartBadge();
     }
 
