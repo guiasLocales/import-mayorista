@@ -192,7 +192,8 @@ export async function appendOrder(env, orderData, categoryName) {
 
 /**
  * Reads configuration from 'Config' sheet
- * Returns object with keys: MIN_TOTAL, DISCOUNT_THRESHOLD, DISCOUNT_RATE
+ * Returns object with global config and category-specific overrides
+ * Format: { global: {...}, categories: { LIBRERIA: {...}, ... } }
  */
 export async function readConfig(env) {
     const token = await getAccessToken(env.GOOGLE_CLIENT_EMAIL, env.GOOGLE_PRIVATE_KEY);
@@ -205,23 +206,54 @@ export async function readConfig(env) {
         const data = await res.json();
         const rows = data.values || [];
 
-        const config = {};
+        const globalConfig = {};
+        const categoryConfigs = {};
+
         rows.forEach(row => {
             if (row.length >= 2) {
                 const key = String(row[0]).trim();
                 const val = parseFloat(String(row[1]).replace(/[^0-9.]/g, '')); // Sanitize number
-                if (key && !isNaN(val)) {
-                    // Special case for percentage if user put "20" instead of "0.20"
-                    if (key === 'DISCOUNT_RATE' && val > 1) {
-                        config[key] = val / 100;
+
+                if (!key || isNaN(val)) return;
+
+                // Check if key has category prefix (e.g., "LIBRERIA_DISCOUNT_RATE")
+                const parts = key.split('_');
+                const possibleCategory = parts[0];
+
+                // If key has underscore and first part looks like a category (all caps, not a known global key)
+                const globalKeys = ['MIN', 'DISCOUNT', 'MAX'];
+                const isGlobalKey = globalKeys.some(gk => key.startsWith(gk));
+
+                if (!isGlobalKey && parts.length > 1 && possibleCategory === possibleCategory.toUpperCase()) {
+                    // Category-specific key
+                    const category = possibleCategory;
+                    const configKey = parts.slice(1).join('_'); // e.g., "DISCOUNT_RATE"
+
+                    if (!categoryConfigs[category]) {
+                        categoryConfigs[category] = {};
+                    }
+
+                    // Special case for percentage
+                    if (configKey === 'DISCOUNT_RATE' && val > 1) {
+                        categoryConfigs[category][configKey] = val / 100;
                     } else {
-                        config[key] = val;
+                        categoryConfigs[category][configKey] = val;
+                    }
+                } else {
+                    // Global key
+                    if (key === 'DISCOUNT_RATE' && val > 1) {
+                        globalConfig[key] = val / 100;
+                    } else {
+                        globalConfig[key] = val;
                     }
                 }
             }
         });
 
-        return config;
+        return {
+            global: globalConfig,
+            categories: categoryConfigs
+        };
     } catch (e) {
         console.error('Error reading config', e);
         return null;

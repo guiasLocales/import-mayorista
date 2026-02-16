@@ -68,13 +68,23 @@ async function handleGetProducts(request, env, url) {
     const category = params.get('category') || env.DEFAULT_CATEGORY || 'LIBRERIA';
 
     // Parallel fetch: Products + Config
-    const [products, sheetConfig] = await Promise.all([
+    const [products, configData] = await Promise.all([
         readProducts(env, category),
         readConfig(env)
     ]);
 
-    // Merge Config with Defaults
-    const config = { ...ORDER_RULES, ...sheetConfig };
+    // Merge Config: Start with defaults, then global config, then category-specific overrides
+    let config = { ...ORDER_RULES };
+
+    if (configData) {
+        // Apply global config
+        config = { ...config, ...configData.global };
+
+        // Apply category-specific overrides if they exist
+        if (configData.categories && configData.categories[category]) {
+            config = { ...config, ...configData.categories[category] };
+        }
+    }
 
     let filteredProducts = products;
 
