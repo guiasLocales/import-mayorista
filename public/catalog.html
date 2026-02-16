@@ -1123,9 +1123,9 @@
       // RENDER MOBILE GRID
       const mobileGrid = document.getElementById('product-grid-mobile');
       mobileGrid.innerHTML = items.map(p => {
-        const stockColor = p.stock ? '#137333' : '#c5221f';
+        const stockClass = p.stock ? 'in-stock' : 'out-of-stock';
         const stockText = p.stock
-          ? (typeof p.stock === 'number' ? `${p.stock} u.` : 'Stock')
+          ? (typeof p.stock === 'number' ? `Stock: ${p.stock}` : 'Stock')
           : 'Sin Stock';
         const btnDisabled = p.stock ? '' : 'disabled';
         const btnText = p.stock ? 'Agregar' : 'Agotado';
@@ -1144,7 +1144,7 @@
                </div>
                <div class="pcm-actions">
                   <div>
-                    <div style="font-size:11px;font-weight:600;color:${stockColor};margin-bottom:2px;">${stockText}</div>
+                    <div class="stock-badge ${stockClass}" style="font-size:11px; margin-bottom:4px; padding: 2px 6px;">${stockText}</div>
                     <div class="pcm-price">${money(p.price)}</div>
                   </div>
                   <button class="btn-add" ${btnDisabled} onclick="addToCart('${p.id}')">${btnText}</button>
