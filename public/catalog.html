@@ -1124,7 +1124,9 @@
       const mobileGrid = document.getElementById('product-grid-mobile');
       mobileGrid.innerHTML = items.map(p => {
         const stockColor = p.stock ? '#137333' : '#c5221f';
-        const stockText = p.stock ? 'Stock' : 'Sin Stock';
+        const stockText = p.stock
+          ? (typeof p.stock === 'number' ? `${p.stock} u.` : 'Stock')
+          : 'Sin Stock';
         const btnDisabled = p.stock ? '' : 'disabled';
         const btnText = p.stock ? 'Agregar' : 'Agotado';
         const packInfo = p.pack ? `<span style="background:#e8f0fe;color:#1967d2;padding:2px 6px;border-radius:4px;">${p.pack}</span>` : '';
