@@ -178,8 +178,7 @@
             <img src="logo.png" alt="Import.cba Mayorista" class="logo">
             <h1>Catalogo Mayorista</h1>
             <p>Selecciona una categoria para ver los productos</p>
-            <a href="/config.html" title="Acceso Administrador"
-                style="display: inline-block; margin-top: 15px; color: #cbd5e0; text-decoration: none; font-size: 1.2rem; transition: color 0.3s;">⚙️</a>
+            <div id="admin-link-container"></div>
         </div>
         <div id="content">
             <div class="loading">
@@ -236,6 +235,22 @@
         }
 
         loadCategories();
+
+        // Show admin link if logged in
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = sessionStorage.getItem('admin_token');
+            if (token) {
+                const container = document.getElementById('admin-link-container');
+                if (container) {
+                    const link = document.createElement('a');
+                    link.href = '/config.html';
+                    link.title = 'Acceso Administrador';
+                    link.style.cssText = 'display: inline-block; margin-top: 15px; color: #cbd5e0; text-decoration: none; font-size: 1.2rem; transition: color 0.3s;';
+                    link.innerHTML = '⚙️';
+                    container.appendChild(link);
+                }
+            }
+        });
     </script>
 </body>
 
