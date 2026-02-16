@@ -283,3 +283,69 @@ export async function readCategories(env) {
     // Extract unique categories, filtering out empty values and numeric-only values
     return [...new Set(dataRows.map(row => String(row[categoryIdx] || '').trim()).filter(cat => cat && !cat.match(/^\d+$/)))];
 }
+
+/**
+ * Updates configuration in 'Config' sheet
+ * Accepts configData: { global: {...}, categories: { CATEGORY: {...} } }
+ * Clears and rewrites the Config sheet
+ */
+export async function updateConfig(env, configData) {
+    const token = await getAccessToken(env.GOOGLE_CLIENT_EMAIL, env.GOOGLE_PRIVATE_KEY);
+
+    // Convert config object to rows for Google Sheets
+    const rows = [];
+
+    // Add global config
+    if (configData.global) {
+        for (const [key, value] of Object.entries(configData.global)) {
+            // Convert DISCOUNT_RATE from decimal to percentage for storage
+            const displayValue = key === 'DISCOUNT_RATE' ? value * 100 : value;
+            rows.push([key, displayValue]);
+        }
+    }
+
+    // Add category-specific config
+    if (configData.categories) {
+        for (const [category, config] of Object.entries(configData.categories)) {
+            for (const [key, value] of Object.entries(config)) {
+                const prefixedKey = `${category}_${key}`;
+                const displayValue = key === 'DISCOUNT_RATE' ? value * 100 : value;
+                rows.push([prefixedKey, displayValue]);
+            }
+        }
+    }
+
+    // Step 1: Clear the Config sheet
+    const clearUrl = `${SHEETS_API_BASE}/${env.SPREADSHEET_ID}/values/Config!A:B:clear`;
+    const clearRes = await fetch(clearUrl, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        }
+    });
+
+    if (!clearRes.ok) {
+        throw new Error('Failed to clear Config sheet');
+    }
+
+    // Step 2: Write new rows
+    const updateUrl = `${SHEETS_API_BASE}/${env.SPREADSHEET_ID}/values/Config!A:B?valueInputOption=RAW`;
+    const updateRes = await fetch(updateUrl, {
+        method: 'PUT',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            values: rows
+        })
+    });
+
+    if (!updateRes.ok) {
+        const errorText = await updateRes.text();
+        throw new Error(`Failed to update Config sheet: ${errorText}`);
+    }
+
+    return await updateRes.json();
+}

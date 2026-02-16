@@ -1,4 +1,4 @@
-import { readProducts, appendOrder, readConfig, readCategories } from './sheets-client.js';
+import { readProducts, appendOrder, readConfig, readCategories, updateConfig } from './sheets-client.js';
 import { ORDER_RULES, isValidEmail } from './utils.js';
 
 // Version: Stock numeric display fix - 2026-02-14
@@ -15,6 +15,13 @@ export default {
             }
             if (path === '/api/categories') {
                 return await handleGetCategories(env);
+            }
+            if (path === '/api/config') {
+                if (request.method === 'GET') {
+                    return await handleGetConfig(env);
+                } else if (request.method === 'PUT') {
+                    return await handleUpdateConfig(request, env);
+                }
             }
             if (path === '/api/orders' && request.method === 'POST') {
                 return await handleSaveOrder(request, env);
@@ -171,9 +178,43 @@ async function handleSaveOrder(request, env) {
     });
 }
 
+
 async function handleGetCategories(env) {
     const categories = await readCategories(env);
     return new Response(JSON.stringify({ categories }), {
         headers: { 'Content-Type': 'application/json' }
     });
+}
+
+async function handleGetConfig(env) {
+    const configData = await readConfig(env);
+    return new Response(JSON.stringify(configData || { global: {}, categories: {} }), {
+        headers: { 'Content-Type': 'application/json' }
+    });
+}
+
+async function handleUpdateConfig(request, env) {
+    try {
+        const configData = await request.json();
+
+        // Validate structure
+        if (!configData || typeof configData !== 'object') {
+            return new Response(JSON.stringify({ error: 'Invalid config data' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
+        // Update the Config sheet
+        await updateConfig(env, configData);
+
+        return new Response(JSON.stringify({ ok: true, message: 'Configuration updated successfully' }), {
+            headers: { 'Content-Type': 'application/json' }
+        });
+    } catch (e) {
+        return new Response(JSON.stringify({ error: e.message }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
 }

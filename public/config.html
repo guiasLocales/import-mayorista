@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración - Import.cba Mayorista</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 15px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: #764ba2;
+        }
+
+        .config-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .config-section {
+            margin-bottom: 40px;
+        }
+
+        .config-section h2 {
+            color: #2d3748;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #718096;
+            font-size: 0.875rem;
+        }
+
+        .category-override {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .category-override h3 {
+            color: #2d3748;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+
+        .remove-category-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #fc8181;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .remove-category-btn:hover {
+            background: #f56565;
+        }
+
+        .add-category-section {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .add-category-section input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .add-category-btn {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .add-category-btn:hover {
+            background: #38a169;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #2d3748;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .message.success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .message.error {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #2d3748;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/" class="back-link">← Volver a Categorías</a>
+            <h1>⚙️ Configuración de Descuentos</h1>
+        </div>
+
+        <div id="message"></div>
+        <div id="loading" class="loading">Cargando configuración...</div>
+
+        <div id="config-form" style="display: none;">
+            <div class="config-panel">
+                <!-- Global Config -->
+                <div class="config-section">
+                    <h2>Configuración Global</h2>
+                    <div class="form-group">
+                        <label for="min-total">Compra Mínima (MIN_TOTAL)</label>
+                        <input type="number" id="min-total" step="1000" min="0">
+                        <small>Monto mínimo para realizar un pedido</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="discount-threshold">Umbral de Descuento (DISCOUNT_THRESHOLD)</label>
+                        <input type="number" id="discount-threshold" step="100000" min="0">
+                        <small>Monto a partir del cual se aplica el descuento</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="discount-rate">Porcentaje de Descuento (DISCOUNT_RATE)</label>
+                        <input type="number" id="discount-rate" step="1" min="0" max="100">
+                        <small>Porcentaje de descuento al superar el umbral (ej: 10 para 10%)</small>
+                    </div>
+                </div>
+
+                <!-- Category-Specific Overrides -->
+                <div class="config-section">
+                    <h2>Descuentos por Categoría</h2>
+                    <div id="category-overrides"></div>
+
+                    <div class="add-category-section">
+                        <input type="text" id="new-category-name" placeholder="Nombre de categoría (ej: LIBRERIA)">
+                        <button class="add-category-btn" onclick="addCategoryOverride()">➕ Agregar Categoría</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="saveConfig()">💾 Guardar Cambios</button>
+                <button class="btn btn-secondary" onclick="loadConfig()">🔄 Recargar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentConfig = { global: {}, categories: {} };
+
+        // Load configuration on page load
+        document.addEventListener('DOMContentLoaded', loadConfig);
+
+        async function loadConfig() {
+            const loading = document.getElementById('loading');
+            const form = document.getElementById('config-form');
+            const message = document.getElementById('message');
+
+            loading.style.display = 'block';
+            form.style.display = 'none';
+            message.innerHTML = '';
+
+            try {
+                const res = await fetch('/api/config');
+                if (!res.ok) throw new Error('Error al cargar configuración');
+
+                currentConfig = await res.json();
+
+                // Populate global config
+                document.getElementById('min-total').value = currentConfig.global.MIN_TOTAL || 300000;
+                document.getElementById('discount-threshold').value = currentConfig.global.DISCOUNT_THRESHOLD || 1500000;
+                document.getElementById('discount-rate').value = (currentConfig.global.DISCOUNT_RATE || 0.1) * 100;
+
+                // Populate category overrides
+                renderCategoryOverrides();
+
+                loading.style.display = 'none';
+                form.style.display = 'block';
+            } catch (e) {
+                loading.style.display = 'none';
+                showMessage('error', e.message);
+            }
+        }
+
+        function renderCategoryOverrides() {
+            const container = document.getElementById('category-overrides');
+            container.innerHTML = '';
+
+            if (!currentConfig.categories || Object.keys(currentConfig.categories).length === 0) {
+                container.innerHTML = '<p style="color: #718096;">No hay descuentos por categoría configurados.</p>';
+                return;
+            }
+
+            for (const [category, config] of Object.entries(currentConfig.categories)) {
+                const div = document.createElement('div');
+                div.className = 'category-override';
+                div.innerHTML = `
+                    <h3>${category}</h3>
+                    <button class="remove-category-btn" onclick="removeCategoryOverride('${category}')">🗑️ Eliminar</button>
+                    <div class="form-group">
+                        <label>Umbral de Descuento</label>
+                        <input type="number" data-category="${category}" data-key="DISCOUNT_THRESHOLD" 
+                               value="${config.DISCOUNT_THRESHOLD || ''}" 
+                               placeholder="Dejar vacío para usar global" step="100000">
+                    </div>
+                    <div class="form-group">
+                        <label>Porcentaje de Descuento (%)</label>
+                        <input type="number" data-category="${category}" data-key="DISCOUNT_RATE" 
+                               value="${config.DISCOUNT_RATE ? config.DISCOUNT_RATE * 100 : ''}" 
+                               placeholder="Dejar vacío para usar global" step="1" min="0" max="100">
+                    </div>
+                `;
+                container.appendChild(div);
+            }
+        }
+
+        function addCategoryOverride() {
+            const input = document.getElementById('new-category-name');
+            const categoryName = input.value.trim().toUpperCase();
+
+            if (!categoryName) {
+                showMessage('error', 'Ingrese un nombre de categoría válido');
+                return;
+            }
+
+            if (currentConfig.categories[categoryName]) {
+                showMessage('error', 'Esta categoría ya existe');
+                return;
+            }
+
+            currentConfig.categories[categoryName] = {};
+            renderCategoryOverrides();
+            input.value = '';
+            showMessage('success', `Categoría "${categoryName}" agregada. No olvides guardar los cambios.`);
+        }
+
+        function removeCategoryOverride(category) {
+            if (confirm(`¿Eliminar descuento para ${category}?`)) {
+                delete currentConfig.categories[category];
+                renderCategoryOverrides();
+                showMessage('success', `Categoría "${category}" eliminada. No olvides guardar los cambios.`);
+            }
+        }
+
+        async function saveConfig() {
+            const message = document.getElementById('message');
+            message.innerHTML = '';
+
+            // Collect global config
+            const globalConfig = {
+                MIN_TOTAL: parseFloat(document.getElementById('min-total').value) || 0,
+                DISCOUNT_THRESHOLD: parseFloat(document.getElementById('discount-threshold').value) || 0,
+                DISCOUNT_RATE: (parseFloat(document.getElementById('discount-rate').value) || 0) / 100
+            };
+
+            // Collect category-specific configs
+            const categoryConfigs = {};
+            document.querySelectorAll('.category-override input').forEach(input => {
+                const category = input.dataset.category;
+                const key = input.dataset.key;
+                const value = input.value.trim();
+
+                if (value !== '') {
+                    if (!categoryConfigs[category]) {
+                        categoryConfigs[category] = {};
+                    }
+                    if (key === 'DISCOUNT_RATE') {
+                        categoryConfigs[category][key] = parseFloat(value) / 100;
+                    } else {
+                        categoryConfigs[category][key] = parseFloat(value);
+                    }
+                }
+            });
+
+            const configData = {
+                global: globalConfig,
+                categories: categoryConfigs
+            };
+
+            try {
+                const res = await fetch('/api/config', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(configData)
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || 'Error al guardar configuración');
+                }
+
+                showMessage('success', '✅ Configuración guardada exitosamente');
+                setTimeout(() => loadConfig(), 2000);
+            } catch (e) {
+                showMessage('error', `❌ ${e.message}`);
+            }
+        }
+
+        function showMessage(type, text) {
+            const message = document.getElementById('message');
+            message.className = `message ${type}`;
+            message.textContent = text;
+            setTimeout(() => {
+                message.innerHTML = '';
+            }, 5000);
+        }
+    </script>
+</body>
+
+</html>
