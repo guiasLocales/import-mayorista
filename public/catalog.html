@@ -472,44 +472,67 @@
 
     @media (max-width: 768px) {
       .header {
-        padding: 16px;
+        padding: 10px 16px;
       }
 
       .header-top {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .header-logo {
+        height: 40px;
       }
 
       .header-title {
         font-size: 16px;
-        padding-right: 90px;
+        padding-right: 0;
+        border: none;
+        padding-left: 0;
+      }
+
+      .header-brand {
+        gap: 8px;
       }
 
       /* Space for cart button */
       .cart-button {
-        position: absolute;
-        top: 16px;
-        right: 16px;
+        position: static;
         padding: 6px 12px;
         font-size: 13px;
+        margin-left: auto;
+      }
+
+      .header-legend {
+        font-size: 11px;
+        margin-top: 4px;
+        margin-bottom: 10px;
+        line-height: 1.3;
       }
 
       .dashboard-bar {
         grid-template-columns: 1fr 1fr;
-        gap: 10px;
+        gap: 8px;
+        margin-bottom: 10px;
       }
 
       .kpi {
-        padding: 12px;
+        padding: 8px 10px;
+      }
+
+      .kpi-products,
+      .kpi-units {
+        display: none;
       }
 
       .kpi-label {
-        font-size: 11px;
+        font-size: 10px;
+        margin-bottom: 2px;
       }
 
       .kpi-value {
-        font-size: 18px;
+        font-size: 16px;
       }
 
       .toolbar input {
@@ -941,19 +964,19 @@
 
       const bar = document.getElementById('dashboard-bar');
       bar.innerHTML = `
-        <div class="kpi">
+        <div class="kpi kpi-products">
           <div class="kpi-label">Productos (${CATEGORY})</div>
           <div class="kpi-value">${state.totalProducts}</div>
         </div>
-        <div class="kpi">
+        <div class="kpi kpi-cart">
           <div class="kpi-label">Productos en carrito</div>
           <div class="kpi-value">${cartItems}</div>
         </div>
-        <div class="kpi">
+        <div class="kpi kpi-units">
           <div class="kpi-label">Artículos (unidades)</div>
           <div class="kpi-value">${cartUnits}</div>
         </div>
-        <div class="kpi">
+        <div class="kpi kpi-total">
           <div class="kpi-label">Total de compra</div>
           <div class="kpi-value">${money(finalTotal)}</div>
         </div>
