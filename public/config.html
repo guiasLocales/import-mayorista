@@ -295,7 +295,7 @@
 
 <body>
     <div class="container">
-        <div class="header">
+        <div class="header" id="main-header" style="display: none;">
             <a href="/" class="back-link">← Volver a Categorías</a>
             <h1>⚙️ Configuración de Descuentos</h1>
         </div>
@@ -384,6 +384,7 @@
             document.getElementById('login-screen').style.display = 'block';
             document.getElementById('loading').style.display = 'none';
             document.getElementById('config-form').style.display = 'none';
+            document.getElementById('main-header').style.display = 'none';
         }
 
         function hideLoginScreen() {
@@ -475,6 +476,7 @@
 
                 loading.style.display = 'none';
                 form.style.display = 'block';
+                document.getElementById('main-header').style.display = 'block';
             } catch (e) {
                 loading.style.display = 'none';
                 showMessage('error', e.message);
