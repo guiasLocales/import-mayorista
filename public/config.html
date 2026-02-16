@@ -238,6 +238,58 @@
             color: #2d3748;
             font-size: 1.2rem;
         }
+
+        .login-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .login-panel h2 {
+            color: #2d3748;
+            font-size: 1.5rem;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .login-form input {
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .login-form input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .login-btn {
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
     </style>
 </head>
 
@@ -249,7 +301,20 @@
         </div>
 
         <div id="message"></div>
-        <div id="loading" class="loading">Cargando configuración...</div>
+
+        <!-- Login Screen -->
+        <div id="login-screen" style="display: none;">
+            <div class="login-panel">
+                <h2>🔐 Acceso de Administrador</h2>
+                <form class="login-form" onsubmit="handleLoginSubmit(event)">
+                    <input type="password" id="login-password" placeholder="Contraseña" required
+                        autocomplete="current-password">
+                    <button type="submit" class="login-btn">Ingresar</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">Cargando configuración...</div>
 
         <div id="config-form" style="display: none;">
             <div class="config-panel">
@@ -297,11 +362,81 @@
     <script>
         let currentConfig = { global: {}, categories: {} };
         let availableCategories = [];
+        let authToken = null;
 
-        // Load configuration and categories on page load
+        // Check authentication on page load
         document.addEventListener('DOMContentLoaded', async () => {
-            await Promise.all([loadConfig(), loadCategories()]);
+            authToken = sessionStorage.getItem('admin_token');
+
+            if (!authToken) {
+                showLoginScreen();
+            } else {
+                // Try to load config with existing token
+                const success = await tryLoadConfig();
+                if (!success) {
+                    // Token invalid, show login
+                    showLoginScreen();
+                }
+            }
         });
+
+        function showLoginScreen() {
+            document.getElementById('login-screen').style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('config-form').style.display = 'none';
+        }
+
+        function hideLoginScreen() {
+            document.getElementById('login-screen').style.display = 'none';
+        }
+
+        async function handleLoginSubmit(event) {
+            event.preventDefault();
+            const password = document.getElementById('login-password').value;
+            const message = document.getElementById('message');
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    showMessage('error', data.error || 'Contraseña incorrecta');
+                    document.getElementById('login-password').value = '';
+                    return;
+                }
+
+                // Save token
+                authToken = data.token;
+                sessionStorage.setItem('admin_token', authToken);
+
+                // Hide login, load config
+                hideLoginScreen();
+                await Promise.all([loadConfig(), loadCategories()]);
+            } catch (e) {
+                showMessage('error', 'Error al iniciar sesión');
+            }
+        }
+
+        async function tryLoadConfig() {
+            try {
+                await Promise.all([loadConfig(), loadCategories()]);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function logout() {
+            authToken = null;
+            sessionStorage.removeItem('admin_token');
+            showLoginScreen();
+            showMessage('error', 'Sesión expirada. Por favor, inicie sesión de nuevo.');
+        }
 
         async function loadConfig() {
             const loading = document.getElementById('loading');
@@ -313,7 +448,18 @@
             message.innerHTML = '';
 
             try {
-                const res = await fetch('/api/config');
+                const res = await fetch('/api/config', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (res.status === 401) {
+                    // Unauthorized, logout
+                    logout();
+                    throw new Error('Sesión expirada');
+                }
+
                 if (!res.ok) throw new Error('Error al cargar configuración');
 
                 currentConfig = await res.json();
@@ -469,9 +615,17 @@
             try {
                 const res = await fetch('/api/config', {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
                     body: JSON.stringify(configData)
                 });
+
+                if (res.status === 401) {
+                    logout();
+                    throw new Error('Sesión expirada');
+                }
 
                 if (!res.ok) {
                     const err = await res.json();

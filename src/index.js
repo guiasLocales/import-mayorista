@@ -1,5 +1,6 @@
 import { readProducts, appendOrder, readConfig, readCategories, updateConfig } from './sheets-client.js';
 import { ORDER_RULES, isValidEmail } from './utils.js';
+import { createToken, verifyToken } from './auth.js';
 
 // Version: Stock numeric display fix - 2026-02-14
 
@@ -16,9 +17,12 @@ export default {
             if (path === '/api/categories') {
                 return await handleGetCategories(env);
             }
+            if (path === '/api/auth/login' && request.method === 'POST') {
+                return await handleLogin(request, env);
+            }
             if (path === '/api/config') {
                 if (request.method === 'GET') {
-                    return await handleGetConfig(env);
+                    return await handleGetConfig(request, env);
                 } else if (request.method === 'PUT') {
                     return await handleUpdateConfig(request, env);
                 }
@@ -186,7 +190,16 @@ async function handleGetCategories(env) {
     });
 }
 
-async function handleGetConfig(env) {
+async function handleGetConfig(request, env) {
+    // Validate authentication
+    const authPayload = await validateAuthToken(request, env);
+    if (!authPayload) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+
     const configData = await readConfig(env);
     return new Response(JSON.stringify(configData || { global: {}, categories: {} }), {
         headers: { 'Content-Type': 'application/json' }
@@ -194,6 +207,15 @@ async function handleGetConfig(env) {
 }
 
 async function handleUpdateConfig(request, env) {
+    // Validate authentication
+    const authPayload = await validateAuthToken(request, env);
+    if (!authPayload) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+
     try {
         const configData = await request.json();
 
@@ -214,6 +236,70 @@ async function handleUpdateConfig(request, env) {
     } catch (e) {
         return new Response(JSON.stringify({ error: e.message }), {
             status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+}
+
+/**
+ * Validates authentication token from request headers
+ * Returns payload if valid, null if invalid
+ */
+async function validateAuthToken(request, env) {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return null;
+    }
+
+    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    const secret = env.ADMIN_PASSWORD || 'default-secret-change-me';
+
+    return await verifyToken(token, secret);
+}
+
+/**
+ * Login endpoint - validates password and returns JWT token
+ */
+async function handleLogin(request, env) {
+    try {
+        const { password } = await request.json();
+
+        if (!password) {
+            return new Response(JSON.stringify({ error: 'Password required' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
+        // Check if ADMIN_PASSWORD is set
+        if (!env.ADMIN_PASSWORD) {
+            return new Response(JSON.stringify({ error: 'Admin password not configured' }), {
+                status: 500,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
+        // Validate password
+        if (password !== env.ADMIN_PASSWORD) {
+            return new Response(JSON.stringify({ error: 'Invalid password' }), {
+                status: 401,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
+        // Generate JWT token
+        const token = await createToken(
+            { role: 'admin' },
+            env.ADMIN_PASSWORD,
+            24 // 24 hours expiration
+        );
+
+        return new Response(JSON.stringify({ token }), {
+            headers: { 'Content-Type': 'application/json' }
+        });
+    } catch (e) {
+        return new Response(JSON.stringify({ error: 'Invalid request' }), {
+            status: 400,
             headers: { 'Content-Type': 'application/json' }
         });
     }
