@@ -144,12 +144,22 @@
             margin-top: 20px;
         }
 
+        .add-category-section select,
         .add-category-section input {
             flex: 1;
             padding: 12px;
             border: 2px solid #e2e8f0;
             border-radius: 8px;
             font-size: 1rem;
+        }
+
+        .add-category-section select {
+            cursor: pointer;
+        }
+
+        .add-category-section select:focus {
+            outline: none;
+            border-color: #667eea;
         }
 
         .add-category-btn {
@@ -269,7 +279,9 @@
                     <div id="category-overrides"></div>
 
                     <div class="add-category-section">
-                        <input type="text" id="new-category-name" placeholder="Nombre de categoría (ej: LIBRERIA)">
+                        <select id="new-category-select">
+                            <option value="">Seleccionar categoría...</option>
+                        </select>
                         <button class="add-category-btn" onclick="addCategoryOverride()">➕ Agregar Categoría</button>
                     </div>
                 </div>
@@ -284,9 +296,12 @@
 
     <script>
         let currentConfig = { global: {}, categories: {} };
+        let availableCategories = [];
 
-        // Load configuration on page load
-        document.addEventListener('DOMContentLoaded', loadConfig);
+        // Load configuration and categories on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await Promise.all([loadConfig(), loadCategories()]);
+        });
 
         async function loadConfig() {
             const loading = document.getElementById('loading');
@@ -310,6 +325,7 @@
 
                 // Populate category overrides
                 renderCategoryOverrides();
+                updateCategoryDropdown();
 
                 loading.style.display = 'none';
                 form.style.display = 'block';
@@ -351,12 +367,46 @@
             }
         }
 
+        async function loadCategories() {
+            try {
+                const res = await fetch('/api/categories');
+                if (!res.ok) throw new Error('Error al cargar categorías');
+                const data = await res.json();
+                availableCategories = data.categories || [];
+                updateCategoryDropdown();
+            } catch (e) {
+                console.error('Error loading categories:', e);
+            }
+        }
+
+        function updateCategoryDropdown() {
+            const select = document.getElementById('new-category-select');
+            if (!select) return;
+
+            // Clear existing options except the first placeholder
+            select.innerHTML = '<option value="">Seleccionar categoría...</option>';
+
+            // Filter out categories that already have discounts
+            const configuredCategories = Object.keys(currentConfig.categories || {});
+            const availableForSelection = availableCategories.filter(
+                cat => !configuredCategories.includes(cat)
+            );
+
+            // Add available categories to dropdown
+            availableForSelection.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                select.appendChild(option);
+            });
+        }
+
         function addCategoryOverride() {
-            const input = document.getElementById('new-category-name');
-            const categoryName = input.value.trim().toUpperCase();
+            const select = document.getElementById('new-category-select');
+            const categoryName = select.value.trim();
 
             if (!categoryName) {
-                showMessage('error', 'Ingrese un nombre de categoría válido');
+                showMessage('error', 'Seleccione una categoría');
                 return;
             }
 
@@ -367,7 +417,8 @@
 
             currentConfig.categories[categoryName] = {};
             renderCategoryOverrides();
-            input.value = '';
+            updateCategoryDropdown();
+            select.value = '';
             showMessage('success', `Categoría "${categoryName}" agregada. No olvides guardar los cambios.`);
         }
 
@@ -375,6 +426,7 @@
             if (confirm(`¿Eliminar descuento para ${category}?`)) {
                 delete currentConfig.categories[category];
                 renderCategoryOverrides();
+                updateCategoryDropdown();
                 showMessage('success', `Categoría "${category}" eliminada. No olvides guardar los cambios.`);
             }
         }
