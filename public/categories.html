@@ -98,6 +98,42 @@
             margin-bottom: 15px;
         }
 
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .social-link {
+            color: #4a5568;
+            transition: transform 0.2s, color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .social-link:hover {
+            transform: scale(1.1);
+        }
+
+        .social-link svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .social-link.instagram:hover {
+            color: #E1306C;
+        }
+
+        .social-link.facebook:hover {
+            color: #1877F2;
+        }
+
+        .social-link.tiktok:hover {
+            color: #000000;
+        }
+
         .category-name {
             font-size: 1.4rem;
             font-weight: 600;
@@ -178,6 +214,7 @@
             <img src="logo.png" alt="Import.cba Mayorista" class="logo">
             <h1>Catalogo Mayorista</h1>
             <p>Selecciona una categoria para ver los productos</p>
+            <div id="social-links-container" class="social-links"></div>
             <div id="admin-link-container"></div>
         </div>
         <div id="content">
@@ -250,6 +287,45 @@
                     container.appendChild(link);
                 }
             }
+
+            // Load Social Icons
+            fetch('/api/config')
+                .then(res => res.json())
+                .then(config => {
+                    if (config.global) {
+                        const container = document.getElementById('social-links-container');
+                        const social = [
+                            {
+                                key: 'SOCIAL_INSTAGRAM',
+                                class: 'instagram',
+                                icon: '<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>'
+                            },
+                            {
+                                key: 'SOCIAL_FACEBOOK',
+                                class: 'facebook',
+                                icon: '<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>'
+                            },
+                            {
+                                key: 'SOCIAL_TIKTOK',
+                                class: 'tiktok',
+                                icon: '<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"></path></svg>'
+                            }
+                        ];
+
+                        social.forEach(s => {
+                            const url = config.global[s.key];
+                            if (url) {
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.target = '_blank';
+                                a.className = `social-link ${s.class}`;
+                                a.innerHTML = s.icon;
+                                container.appendChild(a);
+                            }
+                        });
+                    }
+                })
+                .catch(err => console.error('Error loading social config', err));
         });
     </script>
 </body>

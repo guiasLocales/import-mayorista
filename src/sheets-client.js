@@ -212,16 +212,24 @@ export async function readConfig(env) {
         rows.forEach(row => {
             if (row.length >= 2) {
                 const key = String(row[0]).trim();
-                const val = parseFloat(String(row[1]).replace(/[^0-9.]/g, '')); // Sanitize number
+                let val = String(row[1]).trim(); // Read as string first
 
-                if (!key || isNaN(val)) return;
+                if (!key) return;
+
+                // Detect if it's a social link (allow string)
+                const isSocial = key.startsWith('SOCIAL_');
+                if (!isSocial) {
+                    // Start standard numeric processing
+                    val = parseFloat(val.replace(/[^0-9.]/g, ''));
+                    if (isNaN(val)) return;
+                }
 
                 // Check if key has category prefix (e.g., "LIBRERIA_DISCOUNT_RATE")
                 const parts = key.split('_');
                 const possibleCategory = parts[0];
 
                 // If key has underscore and first part looks like a category (all caps, not a known global key)
-                const globalKeys = ['MIN', 'DISCOUNT', 'MAX'];
+                const globalKeys = ['MIN', 'DISCOUNT', 'MAX', 'SOCIAL'];
                 const isGlobalKey = globalKeys.some(gk => key.startsWith(gk));
 
                 if (!isGlobalKey && parts.length > 1 && possibleCategory === possibleCategory.toUpperCase()) {

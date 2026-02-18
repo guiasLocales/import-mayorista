@@ -338,25 +338,44 @@
                     </div>
                 </div>
 
-                <!-- Category-Specific Overrides -->
-                <div class="config-section">
-                    <h2>Descuentos por Categoría</h2>
-                    <div id="category-overrides"></div>
+            </div>
 
-                    <div class="add-category-section">
-                        <select id="new-category-select">
-                            <option value="">Seleccionar categoría...</option>
-                        </select>
-                        <button class="add-category-btn" onclick="addCategoryOverride()">➕ Agregar Categoría</button>
-                    </div>
+            <!-- Social Media -->
+            <div class="config-section">
+                <h2>Redes Sociales</h2>
+                <div class="form-group">
+                    <label for="social-instagram">Instagram (URL)</label>
+                    <input type="text" id="social-instagram" placeholder="https://instagram.com/tu_usuario">
+                </div>
+                <div class="form-group">
+                    <label for="social-facebook">Facebook (URL)</label>
+                    <input type="text" id="social-facebook" placeholder="https://facebook.com/tu_pagina">
+                </div>
+                <div class="form-group">
+                    <label for="social-tiktok">TikTok (URL)</label>
+                    <input type="text" id="social-tiktok" placeholder="https://tiktok.com/@tu_usuario">
                 </div>
             </div>
 
-            <div class="action-buttons">
-                <button class="btn btn-primary" onclick="saveConfig()">💾 Guardar Cambios</button>
-                <button class="btn btn-secondary" onclick="loadConfig()">🔄 Recargar</button>
+            <!-- Category-Specific Overrides -->
+            <div class="config-section">
+                <h2>Descuentos por Categoría</h2>
+                <div id="category-overrides"></div>
+
+                <div class="add-category-section">
+                    <select id="new-category-select">
+                        <option value="">Seleccionar categoría...</option>
+                    </select>
+                    <button class="add-category-btn" onclick="addCategoryOverride()">➕ Agregar Categoría</button>
+                </div>
             </div>
         </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-primary" onclick="saveConfig()">💾 Guardar Cambios</button>
+            <button class="btn btn-secondary" onclick="loadConfig()">🔄 Recargar</button>
+        </div>
+    </div>
     </div>
 
     <script>
@@ -469,6 +488,11 @@
                 document.getElementById('min-total').value = currentConfig.global.MIN_TOTAL || 300000;
                 document.getElementById('discount-threshold').value = currentConfig.global.DISCOUNT_THRESHOLD || 1500000;
                 document.getElementById('discount-rate').value = (currentConfig.global.DISCOUNT_RATE || 0.1) * 100;
+
+                // Populate social
+                document.getElementById('social-instagram').value = currentConfig.global.SOCIAL_INSTAGRAM || '';
+                document.getElementById('social-facebook').value = currentConfig.global.SOCIAL_FACEBOOK || '';
+                document.getElementById('social-tiktok').value = currentConfig.global.SOCIAL_TIKTOK || '';
 
                 // Populate category overrides
                 renderCategoryOverrides();
@@ -587,7 +611,10 @@
             const globalConfig = {
                 MIN_TOTAL: parseFloat(document.getElementById('min-total').value) || 0,
                 DISCOUNT_THRESHOLD: parseFloat(document.getElementById('discount-threshold').value) || 0,
-                DISCOUNT_RATE: (parseFloat(document.getElementById('discount-rate').value) || 0) / 100
+                DISCOUNT_RATE: (parseFloat(document.getElementById('discount-rate').value) || 0) / 100,
+                SOCIAL_INSTAGRAM: document.getElementById('social-instagram').value.trim(),
+                SOCIAL_FACEBOOK: document.getElementById('social-facebook').value.trim(),
+                SOCIAL_TIKTOK: document.getElementById('social-tiktok').value.trim()
             };
 
             // Collect category-specific configs
