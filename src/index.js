@@ -191,15 +191,6 @@ async function handleGetCategories(env) {
 }
 
 async function handleGetConfig(request, env) {
-    // Validate authentication
-    const authPayload = await validateAuthToken(request, env);
-    if (!authPayload) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-            status: 401,
-            headers: { 'Content-Type': 'application/json' }
-        });
-    }
-
     const configData = await readConfig(env);
     return new Response(JSON.stringify(configData || { global: {}, categories: {} }), {
         headers: { 'Content-Type': 'application/json' }
