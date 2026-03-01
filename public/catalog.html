@@ -821,18 +821,14 @@
         <div class="info-message">
           Ingresá tus datos que alguien de nuestro equipo se va a estar comunicando a la brevedad.
         </div>
-        <div class="form-group">
-          <label>Nombre y apellido *</label>
-          <input id="client-name" required>
+        <div style="font-size:13px; color:#5f6368; margin-bottom:15px; text-align:center;">
+          Ingresá tu nombre para enviar el pedido por WhatsApp.
         </div>
         <div class="form-group">
-          <label>Teléfono *</label>
-          <input id="client-phone" required>
+          <label>Nombre y Apellido</label>
+          <input type="text" id="client-name" placeholder="Tu nombre" required>
         </div>
-        <div class="form-group">
-          <label>Email *</label>
-          <input id="client-email" type="email" required>
-        </div>
+        <!-- Removed phone and email fields as requested -->
 
         <div id="checkout-summary" class="cart-total"></div>
 
@@ -1403,14 +1399,12 @@
       if (sendingOrder) return;
 
       const name = document.getElementById('client-name').value.trim();
-      const phone = document.getElementById('client-phone').value.trim();
-      const email = document.getElementById('client-email').value.trim();
 
-      if (!name || !phone || !email) { alert('Todos los campos son obligatorios'); return; }
+      if (!name) { alert('El nombre es obligatorio'); return; }
       if (!cart.length) { alert('Carrito vacío'); return; }
 
       // Validación final pre-envío
-      const { rawTotal } = computeCartTotals();
+      const { rawTotal, discount, finalTotal } = computeCartTotals();
       if (rawTotal < ORDER_RULES.MIN_TOTAL) {
         const warnEl = document.getElementById('min-warn');
         warnEl.style.display = 'block';
@@ -1418,7 +1412,7 @@
         return;
       }
 
-      const order = { client: { name, phone, email }, items: cart };
+      const order = { client: { name, phone: '', email: '' }, items: cart };
 
       const summaryEl = document.getElementById('checkout-summary');
       const btn = document.getElementById('send-order-btn');
@@ -1440,9 +1434,7 @@
             const waNumber = waConfig.replace(/[^0-9]/g, '');
             if (waNumber) {
               let msg = `¡Hola! Acabo de hacer un pedido.\n\n`;
-              msg += `*Cliente:* ${name}\n`;
-              msg += `*Teléfono:* ${phone}\n`;
-              msg += `*Email:* ${email}\n\n`;
+              msg += `*Cliente:* ${name}\n\n`;
               msg += `*Detalle:*\n`;
 
               cart.forEach(it => {

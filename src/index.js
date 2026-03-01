@@ -138,8 +138,8 @@ async function handleSaveOrder(request, env) {
         return new Response(JSON.stringify({ error: 'Pedido vacío o datos incompletos' }), { status: 400 });
     }
 
-    if (!order.client.name || !order.client.phone || !order.client.email) {
-        return new Response(JSON.stringify({ error: 'Faltan datos del cliente' }), { status: 400 });
+    if (!order.client.name) {
+        return new Response(JSON.stringify({ error: 'Falta el nombre del cliente' }), { status: 400 });
     }
 
     // Re-calculate totals server-side for security using Dynamic Config
