@@ -1433,6 +1433,33 @@
 
         if (res && res.ok) {
           summaryEl.innerHTML = '<div class="success-message">✓ Pedido enviado correctamente. ¡Gracias por tu compra!</div>';
+
+          // Construct WhatsApp message if number is configured
+          const waConfig = ORDER_RULES.SOCIAL_WHATSAPP;
+          if (waConfig) {
+            const waNumber = waConfig.replace(/[^0-9]/g, '');
+            if (waNumber) {
+              let msg = `¡Hola! Acabo de hacer un pedido.\n\n`;
+              msg += `*Cliente:* ${name}\n`;
+              msg += `*Teléfono:* ${phone}\n`;
+              msg += `*Email:* ${email}\n\n`;
+              msg += `*Detalle:*\n`;
+
+              cart.forEach(it => {
+                msg += `- ${it.qty}x ${it.name} (Cod: ${it.code}) -> ${money(it.price * it.qty)}\n`;
+              });
+
+              msg += `\n*Subtotal:* ${money(rawTotal)}\n`;
+              if (discount > 0) {
+                msg += `*Descuento:* -${money(discount)}\n`;
+              }
+              msg += `*Total Final:* ${money(finalTotal)}\n`;
+
+              const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;
+              window.open(waUrl, '_blank');
+            }
+          }
+
           cart = [];
           saveCartToStorage();
           updateCartBadge();

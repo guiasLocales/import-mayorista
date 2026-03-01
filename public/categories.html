@@ -325,7 +325,10 @@
                             const url = config.global[s.key];
                             if (url) {
                                 const a = document.createElement('a');
-                                a.href = url;
+                                // Format WhatsApp url correctly
+                                a.href = s.key === 'SOCIAL_WHATSAPP'
+                                    ? 'https://wa.me/' + url.replace(/[^0-9]/g, '')
+                                    : url;
                                 a.target = '_blank';
                                 a.className = `social-link ${s.class}`;
                                 a.innerHTML = s.icon;
