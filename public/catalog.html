@@ -1435,7 +1435,7 @@
             if (waNumber) {
               let orderDetails = '';
               cart.forEach(it => {
-                orderDetails += `▸ ${it.qty}x ${it.name} -> ${money(it.price * it.qty)}\n`;
+                orderDetails += `• ${it.qty} unidades de *${it.name}* (Subtotal: ${money(it.price * it.qty)})\n`;
               });
 
               let msg = ORDER_RULES.SOCIAL_WHATSAPP_MESSAGE;
