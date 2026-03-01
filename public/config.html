@@ -360,6 +360,14 @@
                     <input type="text" id="social-whatsapp" placeholder="Ej: 5491122334455">
                     <small>Ingresa solo el número con código de área (sin el '+')</small>
                 </div>
+                <div class="form-group">
+                    <label for="social-whatsapp-message">Mensaje de WhatsApp (Plantilla)</label>
+                    <textarea id="social-whatsapp-message" rows="6"
+                        placeholder="¡Hola! Acabo de hacer un pedido.&#10;{detalle}&#10;Total: {total}"
+                        style="width:100%;font-family:inherit;padding:8px;border:1px solid #e2e8f0;border-radius:6px;resize:vertical;"></textarea>
+                    <small>Puedes usar las etiquetas: <b>{nombre}</b>, <b>{detalle}</b>, <b>{subtotal}</b>,
+                        <b>{descuento}</b>, <b>{total}</b>.</small>
+                </div>
             </div>
 
             <!-- Category-Specific Overrides -->
@@ -499,6 +507,7 @@
                 document.getElementById('social-facebook').value = currentConfig.global.SOCIAL_FACEBOOK || '';
                 document.getElementById('social-tiktok').value = currentConfig.global.SOCIAL_TIKTOK || '';
                 document.getElementById('social-whatsapp').value = currentConfig.global.SOCIAL_WHATSAPP || '';
+                document.getElementById('social-whatsapp-message').value = currentConfig.global.SOCIAL_WHATSAPP_MESSAGE || '';
 
                 // Populate category overrides
                 renderCategoryOverrides();
@@ -621,7 +630,8 @@
                 SOCIAL_INSTAGRAM: document.getElementById('social-instagram').value.trim(),
                 SOCIAL_FACEBOOK: document.getElementById('social-facebook').value.trim(),
                 SOCIAL_TIKTOK: document.getElementById('social-tiktok').value.trim(),
-                SOCIAL_WHATSAPP: document.getElementById('social-whatsapp').value.trim()
+                SOCIAL_WHATSAPP: document.getElementById('social-whatsapp').value.trim(),
+                SOCIAL_WHATSAPP_MESSAGE: document.getElementById('social-whatsapp-message').value.trim()
             };
 
             // Collect category-specific configs
