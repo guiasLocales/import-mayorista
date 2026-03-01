@@ -355,6 +355,10 @@
                     <label for="social-tiktok">TikTok (URL)</label>
                     <input type="text" id="social-tiktok" placeholder="https://tiktok.com/@tu_usuario">
                 </div>
+                <div class="form-group">
+                    <label for="social-whatsapp">WhatsApp (URL)</label>
+                    <input type="text" id="social-whatsapp" placeholder="https://wa.me/numerotelefono">
+                </div>
             </div>
 
             <!-- Category-Specific Overrides -->
@@ -493,6 +497,7 @@
                 document.getElementById('social-instagram').value = currentConfig.global.SOCIAL_INSTAGRAM || '';
                 document.getElementById('social-facebook').value = currentConfig.global.SOCIAL_FACEBOOK || '';
                 document.getElementById('social-tiktok').value = currentConfig.global.SOCIAL_TIKTOK || '';
+                document.getElementById('social-whatsapp').value = currentConfig.global.SOCIAL_WHATSAPP || '';
 
                 // Populate category overrides
                 renderCategoryOverrides();
@@ -614,7 +619,8 @@
                 DISCOUNT_RATE: (parseFloat(document.getElementById('discount-rate').value) || 0) / 100,
                 SOCIAL_INSTAGRAM: document.getElementById('social-instagram').value.trim(),
                 SOCIAL_FACEBOOK: document.getElementById('social-facebook').value.trim(),
-                SOCIAL_TIKTOK: document.getElementById('social-tiktok').value.trim()
+                SOCIAL_TIKTOK: document.getElementById('social-tiktok').value.trim(),
+                SOCIAL_WHATSAPP: document.getElementById('social-whatsapp').value.trim()
             };
 
             // Collect category-specific configs
