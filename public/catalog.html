@@ -1435,7 +1435,7 @@
             if (waNumber) {
               let orderDetails = '';
               cart.forEach(it => {
-                orderDetails += `- ${it.qty}x ${it.name} (Cod: ${it.code}) -> ${money(it.price * it.qty)}\n`;
+                orderDetails += `▸ ${it.qty}x ${it.name} -> ${money(it.price * it.qty)}\n`;
               });
 
               let msg = ORDER_RULES.SOCIAL_WHATSAPP_MESSAGE;
@@ -1447,14 +1447,16 @@
                   .replace(/{descuento}/g, money(discount))
                   .replace(/{total}/g, money(finalTotal));
               } else {
-                msg = `¡Hola! Acabo de hacer un pedido.\n\n`;
-                msg += `*Cliente:* ${name}\n\n`;
-                msg += `*Detalle:*\n${orderDetails}\n`;
-                msg += `*Subtotal:* ${money(rawTotal)}\n`;
+                msg = `¡Hola! Acabo de hacer un pedido. 🛒\n\n`;
+                msg += `👤 *Cliente:* ${name}\n\n`;
+                msg += `📦 *Detalle del Pedido:*\n${orderDetails}\n`;
                 if (discount > 0) {
-                  msg += `*Descuento:* -${money(discount)}\n`;
+                  msg += `💰 *Subtotal:* ${money(rawTotal)}\n`;
+                  msg += `🎁 *Descuento:* -${money(discount)}\n`;
+                  msg += `✅ *Total Final:* ${money(finalTotal)}\n`;
+                } else {
+                  msg += `✅ *Total Final:* ${money(finalTotal)}\n`;
                 }
-                msg += `*Total Final:* ${money(finalTotal)}\n`;
               }
 
               const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;
