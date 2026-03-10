@@ -216,12 +216,19 @@ export async function readConfig(env) {
 
                 if (!key) return;
 
-                // Detect if it's a social link (allow string)
+                // Detect if it's a social link or boolean (allow string)
                 const isSocial = key.startsWith('SOCIAL_');
-                if (!isSocial) {
+                const isBoolean = key.includes('ENABLE_DISCOUNT');
+
+                let processedVal;
+                if (isSocial) {
+                    processedVal = val;
+                } else if (isBoolean) {
+                    processedVal = val.toUpperCase() === 'TRUE';
+                } else {
                     // Start standard numeric processing
-                    val = parseFloat(val.replace(/[^0-9.]/g, ''));
-                    if (isNaN(val)) return;
+                    processedVal = parseFloat(val.replace(/[^0-9.]/g, ''));
+                    if (isNaN(processedVal)) return;
                 }
 
                 // Check if key has category prefix (e.g., "LIBRERIA_DISCOUNT_RATE")
@@ -229,7 +236,7 @@ export async function readConfig(env) {
                 const possibleCategory = parts[0];
 
                 // If key has underscore and first part looks like a category (all caps, not a known global key)
-                const globalKeys = ['MIN', 'DISCOUNT', 'MAX', 'SOCIAL'];
+                const globalKeys = ['MIN', 'DISCOUNT', 'MAX', 'SOCIAL', 'ENABLE'];
                 const isGlobalKey = globalKeys.some(gk => key.startsWith(gk));
 
                 if (!isGlobalKey && parts.length > 1 && possibleCategory === possibleCategory.toUpperCase()) {
@@ -242,17 +249,17 @@ export async function readConfig(env) {
                     }
 
                     // Special case for percentage
-                    if (configKey === 'DISCOUNT_RATE' && val > 1) {
-                        categoryConfigs[category][configKey] = val / 100;
+                    if (configKey === 'DISCOUNT_RATE' && typeof processedVal === 'number' && processedVal > 1) {
+                        categoryConfigs[category][configKey] = processedVal / 100;
                     } else {
-                        categoryConfigs[category][configKey] = val;
+                        categoryConfigs[category][configKey] = processedVal;
                     }
                 } else {
                     // Global key
-                    if (key === 'DISCOUNT_RATE' && val > 1) {
-                        globalConfig[key] = val / 100;
+                    if (key === 'DISCOUNT_RATE' && typeof processedVal === 'number' && processedVal > 1) {
+                        globalConfig[key] = processedVal / 100;
                     } else {
-                        globalConfig[key] = val;
+                        globalConfig[key] = processedVal;
                     }
                 }
             }
