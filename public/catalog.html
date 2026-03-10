@@ -884,6 +884,7 @@
       MIN_TOTAL: 100000,
       DISCOUNT_THRESHOLD: 1000000,
       DISCOUNT_RATE: 0.20,
+      ENABLE_DISCOUNT: true,
     };
 
     // Helper de formateo monetario
@@ -929,7 +930,7 @@
     // Cálculo de totales y descuentos en tiempo real
     function computeCartTotals() {
       const rawTotal = cart.reduce((s, it) => s + (Number(it.price) * Number(it.qty)), 0);
-      const discount = (rawTotal >= ORDER_RULES.DISCOUNT_THRESHOLD)
+      const discount = (ORDER_RULES.ENABLE_DISCOUNT !== false && rawTotal >= ORDER_RULES.DISCOUNT_THRESHOLD)
         ? (rawTotal * ORDER_RULES.DISCOUNT_RATE)
         : 0;
       const finalTotal = rawTotal - discount;
@@ -1040,9 +1041,11 @@
           console.log('Using config from Sheet:', data.config);
           Object.assign(ORDER_RULES, data.config);
           // Update Header Legend with new values
-          document.getElementById('page-legend').innerHTML =
-            `<strong>Compra mínima:</strong> ${money(ORDER_RULES.MIN_TOTAL)} · ` +
-            `<strong>${Math.round(ORDER_RULES.DISCOUNT_RATE * 100)}% OFF</strong> desde ${money(ORDER_RULES.DISCOUNT_THRESHOLD)}.`;
+          let legendHtml = `<strong>Compra mínima:</strong> ${money(ORDER_RULES.MIN_TOTAL)}`;
+          if (ORDER_RULES.ENABLE_DISCOUNT !== false) {
+            legendHtml += ` · <strong>${Math.round(ORDER_RULES.DISCOUNT_RATE * 100)}% OFF</strong> desde ${money(ORDER_RULES.DISCOUNT_THRESHOLD)}.`;
+          }
+          document.getElementById('page-legend').innerHTML = legendHtml;
         }
 
         renderProductsPage(data);

@@ -154,7 +154,7 @@ async function handleSaveOrder(request, env) {
         }), { status: 400 });
     }
 
-    const discount = (rawTotal >= rules.DISCOUNT_THRESHOLD)
+    const discount = (rules.ENABLE_DISCOUNT !== false && rawTotal >= rules.DISCOUNT_THRESHOLD)
         ? (rawTotal * rules.DISCOUNT_RATE)
         : 0;
 

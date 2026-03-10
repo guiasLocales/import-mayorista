@@ -336,6 +336,10 @@
                         <input type="number" id="discount-rate" step="1" min="0" max="100">
                         <small>Porcentaje de descuento al superar el umbral (ej: 10 para 10%)</small>
                     </div>
+                    <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+                        <input type="checkbox" id="enable-discount" style="width: auto;">
+                        <label for="enable-discount" style="margin-bottom: 0;">Habilitar Descuento Global</label>
+                    </div>
                 </div>
 
             </div>
@@ -501,6 +505,7 @@
                 document.getElementById('min-total').value = currentConfig.global.MIN_TOTAL || 300000;
                 document.getElementById('discount-threshold').value = currentConfig.global.DISCOUNT_THRESHOLD || 1500000;
                 document.getElementById('discount-rate').value = (currentConfig.global.DISCOUNT_RATE || 0.1) * 100;
+                document.getElementById('enable-discount').checked = currentConfig.global.ENABLE_DISCOUNT !== false;
 
                 // Populate social
                 document.getElementById('social-instagram').value = currentConfig.global.SOCIAL_INSTAGRAM || '';
@@ -548,6 +553,11 @@
                         <input type="number" data-category="${category}" data-key="DISCOUNT_RATE" 
                                value="${config.DISCOUNT_RATE ? config.DISCOUNT_RATE * 100 : ''}" 
                                placeholder="Dejar vacío para usar global" step="1" min="0" max="100">
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" data-category="${category}" data-key="ENABLE_DISCOUNT" 
+                               ${config.ENABLE_DISCOUNT !== false ? 'checked' : ''} style="width: auto;">
+                        <label style="margin-bottom: 0;">Habilitar Descuento en esta Categoría</label>
                     </div>
                 `;
                 container.appendChild(div);
@@ -627,6 +637,7 @@
                 MIN_TOTAL: parseFloat(document.getElementById('min-total').value) || 0,
                 DISCOUNT_THRESHOLD: parseFloat(document.getElementById('discount-threshold').value) || 0,
                 DISCOUNT_RATE: (parseFloat(document.getElementById('discount-rate').value) || 0) / 100,
+                ENABLE_DISCOUNT: document.getElementById('enable-discount').checked,
                 SOCIAL_INSTAGRAM: document.getElementById('social-instagram').value.trim(),
                 SOCIAL_FACEBOOK: document.getElementById('social-facebook').value.trim(),
                 SOCIAL_TIKTOK: document.getElementById('social-tiktok').value.trim(),
@@ -647,10 +658,19 @@
                     }
                     if (key === 'DISCOUNT_RATE') {
                         categoryConfigs[category][key] = parseFloat(value) / 100;
+                    } else if (key === 'ENABLE_DISCOUNT') {
+                        // Handled separately below for checkboxes
                     } else {
                         categoryConfigs[category][key] = parseFloat(value);
                     }
                 }
+            });
+
+            // Collect category-specific checkboxes
+            document.querySelectorAll('.category-override input[type="checkbox"]').forEach(input => {
+                const category = input.dataset.category;
+                if (!categoryConfigs[category]) categoryConfigs[category] = {};
+                categoryConfigs[category].ENABLE_DISCOUNT = input.checked;
             });
 
             const configData = {
