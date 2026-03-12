@@ -216,12 +216,13 @@ export async function readConfig(env) {
 
                 if (!key) return;
 
-                // Detect if it's a social link or boolean (allow string)
+                // Detect if it's a social link, boolean or image URL (allow string)
                 const isSocial = key.startsWith('SOCIAL_');
                 const isBoolean = key.includes('ENABLE_DISCOUNT');
+                const isImage = key.includes('IMAGE_URL');
 
                 let processedVal;
-                if (isSocial) {
+                if (isSocial || isImage) {
                     processedVal = val;
                 } else if (isBoolean) {
                     processedVal = val.toUpperCase() === 'TRUE';

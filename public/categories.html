@@ -245,6 +245,9 @@
 
         async function loadCategories() {
             try {
+                var configResponse = await fetch('/api/config');
+                var config = await configResponse.json();
+                
                 var response = await fetch('/api/categories');
                 if (!response.ok) throw new Error('Error al cargar categorias');
                 var data = await response.json();
@@ -253,17 +256,31 @@
                     document.getElementById('content').innerHTML = '<div class="error"><h2>No se encontraron categorias</h2></div>';
                     return;
                 }
-                renderCategories(categories);
+                renderCategories(categories, config);
             } catch (error) {
                 document.getElementById('content').innerHTML = '<div class="error"><h2>Error al cargar categorias</h2><p>' + error.message + '</p></div>';
             }
         }
 
-        function renderCategories(categories) {
+        function renderCategories(categories, config) {
             var grid = '';
             for (var i = 0; i < categories.length; i++) {
                 var cat = categories[i];
-                var icon = categoryIcons[cat.toUpperCase()] || categoryIcons['DEFAULT'];
+                var catConfig = (config.categories && config.categories[cat.toUpperCase()]) || {};
+                
+                var icon = '';
+                var customImg = catConfig.IMAGE_URL;
+
+                if (customImg) {
+                    if (customImg.length > 5) {
+                        icon = '<img src="' + customImg + '" style="width:100%;height:100%;object-fit:cover;">';
+                    } else {
+                        icon = customImg;
+                    }
+                } else {
+                    icon = categoryIcons[cat.toUpperCase()] || categoryIcons['DEFAULT'];
+                }
+
                 var cleanName = cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase();
                 var url = '/catalog?category=' + encodeURIComponent(cat);
                 grid += '<a href="' + url + '" class="category-card" style="text-decoration:none;">';

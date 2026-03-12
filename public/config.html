@@ -374,14 +374,14 @@
                 </div>
             </div>
 
-            <!-- Category-Specific Overrides -->
+            <!-- Category Configuration -->
             <div class="config-section">
-                <h2>Descuentos por Categoría</h2>
+                <h2>Configuración de Categorías</h2>
                 <div id="category-overrides"></div>
 
                 <div class="add-category-section">
                     <select id="new-category-select">
-                        <option value="">Seleccionar categoría...</option>
+                        <option value="">Seleccionar categoría para configurar...</option>
                     </select>
                     <button class="add-category-btn" onclick="addCategoryOverride()">➕ Agregar Categoría</button>
                 </div>
@@ -532,7 +532,7 @@
             container.innerHTML = '';
 
             if (!currentConfig.categories || Object.keys(currentConfig.categories).length === 0) {
-                container.innerHTML = '<p style="color: #718096;">No hay descuentos por categoría configurados.</p>';
+                container.innerHTML = '<p style="color: #718096;">Agregue una categoría para personalizar su icono o descuentos.</p>';
                 return;
             }
 
@@ -542,26 +542,83 @@
                 div.innerHTML = `
                     <h3>${category}</h3>
                     <button class="remove-category-btn" onclick="removeCategoryOverride('${category}')">🗑️ Eliminar</button>
-                    <div class="form-group">
-                        <label>Umbral de Descuento</label>
-                        <input type="number" data-category="${category}" data-key="DISCOUNT_THRESHOLD" 
-                               value="${config.DISCOUNT_THRESHOLD || ''}" 
-                               placeholder="Dejar vacío para usar global" step="100000">
+                    
+                    <div style="display: flex; gap: 20px; align-items: flex-start; margin-bottom: 20px;">
+                        <div style="flex: 1;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Icono / Imagen de Portada</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="text" data-category="${category}" data-key="IMAGE_URL" 
+                                       id="img-input-${category}"
+                                       value="${config.IMAGE_URL || ''}" 
+                                       placeholder="Emoji o URL de imagen"
+                                       oninput="updatePreview('${category}')">
+                                <button class="btn-secondary" style="padding: 5px 10px; font-size: 0.8rem;" 
+                                        onclick="document.getElementById('file-input-${category}').click()">📁 Subir</button>
+                                <input type="file" id="file-input-${category}" style="display:none;" 
+                                       accept="image/*" onchange="handleFileUpload(this, '${category}')">
+                            </div>
+                            <small>Puedes poner un emoji, una URL o subir una imagen directa.</small>
+                        </div>
+                        <div id="preview-${category}" style="width: 80px; height: 80px; background: white; border-radius: 10px; border: 2px dashed #cbd5e0; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; overflow: hidden;">
+                            ${config.IMAGE_URL ? (config.IMAGE_URL.length > 5 ? `<img src="${config.IMAGE_URL}" style="width:100%;height:100%;object-fit:cover;">` : config.IMAGE_URL) : '📦'}
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>Porcentaje de Descuento (%)</label>
-                        <input type="number" data-category="${category}" data-key="DISCOUNT_RATE" 
-                               value="${config.DISCOUNT_RATE ? config.DISCOUNT_RATE * 100 : ''}" 
-                               placeholder="Dejar vacío para usar global" step="1" min="0" max="100">
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label>Umbral Descuento</label>
+                            <input type="number" data-category="${category}" data-key="DISCOUNT_THRESHOLD" 
+                                   value="${config.DISCOUNT_THRESHOLD || ''}" 
+                                   placeholder="Global" step="100000">
+                        </div>
+                        <div class="form-group">
+                            <label>Descuento (%)</label>
+                            <input type="number" data-category="${category}" data-key="DISCOUNT_RATE" 
+                                   value="${config.DISCOUNT_RATE ? config.DISCOUNT_RATE * 100 : ''}" 
+                                   placeholder="Global" step="1" min="0" max="100">
+                        </div>
                     </div>
                     <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
                         <input type="checkbox" data-category="${category}" data-key="ENABLE_DISCOUNT" 
                                ${config.ENABLE_DISCOUNT !== false ? 'checked' : ''} style="width: auto;">
-                        <label style="margin-bottom: 0;">Habilitar Descuento en esta Categoría</label>
+                        <label style="margin-bottom: 0;">Habilitar Descuento</label>
                     </div>
                 `;
                 container.appendChild(div);
             }
+        }
+
+        function updatePreview(category) {
+            const input = document.getElementById(`img-input-${category}`);
+            const preview = document.getElementById(`preview-${category}`);
+            const val = input.value.trim();
+            
+            if (!val) {
+                preview.innerHTML = '📦';
+            } else if (val.length > 5) { // Likely URL or Base64
+                preview.innerHTML = `<img src="${val}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='❌'">`;
+            } else {
+                preview.innerHTML = val;
+            }
+        }
+
+        function handleFileUpload(input, category) {
+            const file = input.files[0];
+            if (!file) return;
+
+            if (file.size > 100 * 1024) { // 100kb limit
+                alert("La imagen es muy pesada. Intenta con una de menos de 100kb.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64 = e.target.result;
+                document.getElementById(`img-input-${category}`).value = base64;
+                updatePreview(category);
+                showMessage('success', 'Imagen cargada localmente. Pulsa Guardar para aplicar.');
+            };
+            reader.readAsDataURL(file);
         }
 
         async function loadCategories() {
@@ -650,6 +707,8 @@
             document.querySelectorAll('.category-override input').forEach(input => {
                 const category = input.dataset.category;
                 const key = input.dataset.key;
+                if (!category || !key) return;
+                
                 const value = input.value.trim();
 
                 if (value !== '') {
@@ -658,8 +717,9 @@
                     }
                     if (key === 'DISCOUNT_RATE') {
                         categoryConfigs[category][key] = parseFloat(value) / 100;
-                    } else if (key === 'ENABLE_DISCOUNT') {
-                        // Handled separately below for checkboxes
+                    } else if (key === 'ENABLE_DISCOUNT' || key === 'IMAGE_URL') {
+                        // Handled separately or as string
+                        if (key === 'IMAGE_URL') categoryConfigs[category][key] = value;
                     } else {
                         categoryConfigs[category][key] = parseFloat(value);
                     }
